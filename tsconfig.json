@@ -36,7 +36,6 @@
     "**/*.tsx", 
     ".next/types/**/*.ts", 
     "vitest.setup.ts", 
-    "vitest.config.ts"
-, "src/components/layout/Header/Header.tsч"  ],
+    "vitest.config.ts"],
   "exclude": ["node_modules"]
 }
