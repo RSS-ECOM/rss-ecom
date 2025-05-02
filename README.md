@@ -58,7 +58,7 @@ _In our project we use the following technologies:_
 
 _To run the project locally, follow these steps:_
 
-1. Clone the repository: `git clone https://github.com/harmon1c/rss-ecom.git`
+1. Clone the repository: `git clone https://github.com/RSS-ECOM/rss-ecom`
 2. Navigate to the project directory: `cd rss-ecom`
 3. Install dependencies: `npm install`
 4. Create a `.env` file based on `.env.example` and fill in your CommerceTools credentials
@@ -117,3 +117,5 @@ _You can run the following scripts in the project directory:_
 - 🧙‍♂️ Oleksii Ostapenko (GitHub: [harmon1c](https://github.com/harmon1c))
 - 🧙‍♂️ Denis Yeresko (GitHub: [dyeresko](https://github.com/dyeresko))
 - 🧙‍♀️ Julia Vasilko (GitHub: [JuliaVasilko](https://github.com/JuliaVasilko))
+
+Project Repository: [https://github.com/RSS-ECOM/rss-ecom](https://github.com/RSS-ECOM/rss-ecom)
