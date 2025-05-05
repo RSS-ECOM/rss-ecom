@@ -1,16 +1,19 @@
+/* eslint-disable import/no-extraneous-dependencies */
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  test: {
+  plugins: [react()],
+  resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    globals: true,
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+  },
+  test: {
+    css: true,
     environment: 'jsdom',
-    root: __dirname,
-    setupFiles: ['vitest.setup.ts'],
-    testTimeout: 10000,
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
   },
 });

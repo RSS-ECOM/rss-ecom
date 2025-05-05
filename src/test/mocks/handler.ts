@@ -1,4 +1,4 @@
-import token from './handlers/token.ts';
+import token from './handlers/token';
 
 const handlers = [...token];
 

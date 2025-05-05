@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Home | Heavy Metal',
   description: 'Welcome to HeavyMetal - your digital armory for all things metallic!',
+  title: 'Home | Heavy Metal',
 };
 
 export default function HomePage(): JSX.Element {
