@@ -3,7 +3,8 @@ documentation:
       any-glob-to-any-file: ['**/*.md']
 
 chore:
-  - any-glob-to-any-file: ['*']
+  - changed-files:
+      any-glob-to-any-file: ['*']
   - head-branch: ['^chore']
 
 feature:
