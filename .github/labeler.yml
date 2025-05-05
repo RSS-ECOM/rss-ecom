@@ -11,7 +11,7 @@ feature:
   - head-branch: '^feat'
 
 fix:
-  - head-branch: ['^fix', '^hotfix']
+  - head-branch: ['^fix\(', '^hotfix']
 
 refactor:
   - head-branch: '^refactor'
