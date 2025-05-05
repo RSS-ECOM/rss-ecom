@@ -16,11 +16,15 @@ interface RootLayoutProps {
   children: ReactNode;
 }
 
+export function LayoutContent({ children }: RootLayoutProps): JSX.Element {
+  return <div id="app-container">{children}</div>;
+}
+
 export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
   return (
     <html lang="en">
       <body>
-        <div id="app-container">{children}</div>
+        <LayoutContent>{children}</LayoutContent>
       </body>
     </html>
   );

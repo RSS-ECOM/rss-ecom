@@ -2,14 +2,14 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import RootLayout from '../layout';
+import { LayoutContent } from '../layout';
 
-describe('RootLayout', () => {
-  it('renders the layout with children', () => {
+describe('LayoutContent', () => {
+  it('renders the layout content with children', () => {
     render(
-      <RootLayout>
+      <LayoutContent>
         <div data-testid="test-content">Test Content</div>
-      </RootLayout>,
+      </LayoutContent>,
     );
 
     expect(screen.getByTestId('test-content')).toBeDefined();
