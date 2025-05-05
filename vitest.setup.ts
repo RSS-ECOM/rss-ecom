@@ -1,4 +1,4 @@
-import server from '@/test/mocks/node.ts';
+import server from '@/test/mocks/node';
 
 if (typeof window !== 'undefined') {
   window.scrollTo = (): void => {};

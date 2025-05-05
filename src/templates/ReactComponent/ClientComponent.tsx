@@ -1,21 +1,22 @@
 'use client';
 
 import type { FC } from 'react';
-import styles from './{{stylesName}}';
+// import styles from './styles.module.css';
 
-interface {{componentName}}Props {
+interface ExampleComponentProps {
   // Define your props here
+  example?: string;
 }
 
-const {{componentName}}: FC<{{componentName}}Props> = (props) => {
+const ExampleComponent: FC<ExampleComponentProps> = (props) => {
   // Destructure props
-  const {} = props;
+  const { example } = props;
   
   return (
-    <div className={styles.container}>
-      {{componentName}} Component
+    <div className="container">
+      Example Component {example}
     </div>
   );
 };
 
-export default {{componentName}};
+export default ExampleComponent;

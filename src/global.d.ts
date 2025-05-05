@@ -3,6 +3,8 @@ declare module '*.module.scss' {
   export default classes;
 }
 
+declare module './{{componentName}}';
+
 declare module '*.jpg' {
   const src: string;
   export default src;
@@ -19,7 +21,8 @@ declare module '*.png' {
 }
 
 declare module '*.svg' {
-  import React from 'react';
+  import type React from 'react';
+
   const SVG: React.VFC<React.SVGProps<SVGSVGElement>>;
   export default SVG;
 }
@@ -37,12 +40,12 @@ declare module '*.webp' {
 // For Next.js environment variables
 declare namespace NodeJS {
   interface ProcessEnv {
-    NEXT_PUBLIC_CTP_PROJECT_KEY: string;
-    NEXT_PUBLIC_CTP_CLIENT_SECRET: string;
-    NEXT_PUBLIC_CTP_CLIENT_ID: string;
-    NEXT_PUBLIC_CTP_REGION: string;
-    NEXT_PUBLIC_CTP_AUTH_URL: string;
     NEXT_PUBLIC_CTP_API_URL: string;
+    NEXT_PUBLIC_CTP_AUTH_URL: string;
+    NEXT_PUBLIC_CTP_CLIENT_ID: string;
+    NEXT_PUBLIC_CTP_CLIENT_SECRET: string;
+    NEXT_PUBLIC_CTP_PROJECT_KEY: string;
+    NEXT_PUBLIC_CTP_REGION: string;
     NEXT_PUBLIC_CTP_SCOPES: string;
     NEXT_PUBLIC_DEFAULT_SEGMENT: string;
     NEXT_PUBLIC_NEXT_SEGMENT: string;
