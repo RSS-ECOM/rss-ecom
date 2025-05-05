@@ -36,7 +36,8 @@ Our modern and industrial website offers a sleek and intuitive shopping experien
 
 _In our project we use the following technologies:_
 
-- **Frontend**: 
+- **Frontend**:
+
   - [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/) for building dynamic user interfaces
   - [Next.js](https://nextjs.org/) for server-side rendering and optimized performance
   - [Shadcn/ui](https://ui.shadcn.com/) for beautifully designed UI components
@@ -77,20 +78,118 @@ This project follows a modified Git Flow workflow:
 All branches should follow this pattern: `{type}(RSS-ECOMM-{sprint}_{issue})/descriptiveName`
 
 Where:
+
 - `{type}` is one of: feat, fix, hotfix, chore, refactor, revert, docs, style, test
 - `{sprint}` is the sprint number
 - `{issue}` is the issue number
 
 Examples:
+
 - `feat(RSS-ECOMM-1_01)/addProductPage`
 - `fix(RSS-ECOMM-2_15)/correctCartTotal`
 
 ### Pull Requests
 
 All code changes should be submitted via pull requests to the `develop` branch. PRs should:
+
 - Have a descriptive title following the same convention as branch names
 - Include a comprehensive description of changes
 - Be reviewed by at least one team member before merging
+
+## Environment Setup 🔧
+
+### Prerequisites
+
+- Node.js 18 or higher
+- npm 9 or higher
+
+### Environment Variables
+
+This project uses environment variables for configuration. Create a `.env.local` file based on `.env.example` with the following variables:
+
+```bash
+# CommerceTools Configuration
+NEXT_PUBLIC_CTP_PROJECT_KEY=your-project-key
+NEXT_PUBLIC_CTP_CLIENT_SECRET=your-client-secret
+NEXT_PUBLIC_CTP_CLIENT_ID=your-client-id
+NEXT_PUBLIC_CTP_REGION=eu-central-1
+NEXT_PUBLIC_CTP_AUTH_URL=https://auth.eu-central-1.aws.commercetools.com
+NEXT_PUBLIC_CTP_API_URL=https://api.eu-central-1.aws.commercetools.com
+NEXT_PUBLIC_CTP_SCOPES=view_published_products:your-project manage_my_profile:your-project ...
+```
+
+Important: Never commit the .env.local file to version control.
+
+### Recommended VS Code Extensions
+
+For the best development experience, we recommend installing the following VS Code extensions:
+
+- **ESLint** (`dbaeumer.vscode-eslint`): JavaScript linting
+- **Prettier** (`esbenp.prettier-vscode`): Code formatting
+- **Stylelint** (`stylelint.vscode-stylelint`): CSS/SCSS linting
+- **GitHub Actions** (`github.vscode-github-actions`): GitHub Actions workflows syntax highlighting and validation
+- **Tailwind CSS IntelliSense** (`bradlc.vscode-tailwindcss`): Intelligent Tailwind CSS tooling
+- **SCSS IntelliSense** (`mrmlnc.vscode-scss`): SCSS IntelliSense support
+- **DotENV** (`mikestead.dotenv`): .env file support
+
+## CI/CD Pipeline 🚀
+
+This project uses GitHub Actions for Continuous Integration and Netlify for Continuous Deployment:
+
+### Continuous Integration
+
+Our CI process includes:
+
+- Code formatting check with Prettier
+- Linting with ESLint and Stylelint
+- Type checking with TypeScript
+- Testing with Vitest (when tests are available)
+- Building the application
+
+### Continuous Deployment
+
+After successful merges to `main` or `develop`, the application is automatically deployed to Netlify.
+
+### Dependency Management
+
+We use [Renovate](https://docs.renovatebot.com/) to keep dependencies up to date:
+
+- Renovate automatically creates pull requests when updates are available
+- Dependencies are grouped by type (e.g., Next.js packages, TypeScript, etc.)
+- All dependency updates require approval through the Dependency Dashboard
+
+## Working with CommerceTools 🛒
+
+This project uses CommerceTools as the backend for e-commerce functionality. The connection is managed through the CommerceTools SDK.
+
+### Authentication
+
+The application uses Client Credentials flow for authentication with CommerceTools API:
+
+```typescript
+// In Next.js with prefix NEXT_PUBLIC_ secrets are available on the client
+const apiKey = process.env.NEXT_PUBLIC_CTP_PROJECT_KEY;
+
+// For server-side components you can use ordinary variables
+// If you don't want the secret to be available on the client, do not use NEXT_PUBLIC_
+const apiSecret = process.env.CTP_CLIENT_SECRET; // only on server
+
+// Basic usage example
+import { apiRoot } from '@/lib/api/commercetools-client';
+
+// Get products
+export async function GET() {
+  try {
+    const response = await apiRoot.products().get().execute();
+
+    return Response.json(response.body.results);
+  } catch (error) {
+    return Response.json({ error: 'Failed to fetch products' }, { status: 500 });
+  }
+}
+```
+
+For detailed API documentation, visit the CommerceTools Documentation.
 
 ## Available Scripts 📑
 
