@@ -1,6 +1,6 @@
 documentation:
   - changed-files:
-      - '**/*.md'
+      any-glob-to-any-file: ['**/*.md']
 
 chore:
   - any-glob-to-any-file: ['*']
@@ -18,18 +18,14 @@ refactor:
 test:
   - head-branch: ['^test']
   - changed-files:
-      - '**/*.spec.ts'
-      - '**/*.test.ts'
-      - '**/*.spec.tsx'
-      - '**/*.test.tsx'
+      any-glob-to-any-file: ['**/*.spec.ts', '**/*.test.ts', '**/*.spec.tsx', '**/*.test.tsx']
 
 revert:
   - head-branch: ['^revert']
 
 style:
   - changed-files:
-      - '**/*.scss'
-      - '**/*.css'
+      any-glob-to-any-file: ['**/*.scss', '**/*.css']
 
 sprint1:
   - head-branch: ['ECOMM-1*']
@@ -48,5 +44,4 @@ sprint5:
 
 dependencies:
   - changed-files:
-      - 'package.json'
-      - 'package-lock.json'
+      any-glob-to-any-file: ['package.json', 'package-lock.json']

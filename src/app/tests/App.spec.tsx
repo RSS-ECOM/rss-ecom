@@ -1,8 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import LayoutContent from '@/components/layout/LayoutContent/LayoutContent';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-
-import { LayoutContent } from '../layout';
 
 describe('LayoutContent', () => {
   it('renders the layout content with children', () => {

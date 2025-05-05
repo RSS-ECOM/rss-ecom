@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import LayoutContent from '@/components/layout/LayoutContent/LayoutContent';
 import '@/styles/globals.scss';
 
 export const metadata: Metadata = {
@@ -14,10 +15,6 @@ export const metadata: Metadata = {
 
 interface RootLayoutProps {
   children: ReactNode;
-}
-
-export function LayoutContent({ children }: RootLayoutProps): JSX.Element {
-  return <div id="app-container">{children}</div>;
 }
 
 export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
