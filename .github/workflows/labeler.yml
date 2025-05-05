@@ -1,6 +1,7 @@
 name: 'Pull Request Labeler'
 on:
   pull_request_target:
+    types: [opened, synchronize, reopened]
 
 jobs:
   labeler:
@@ -8,9 +9,12 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+
     steps:
-      - name: Checkout code
+      - name: Checkout PR code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Label Pull Request
         uses: actions/labeler@v5
