@@ -1,0 +1,48 @@
+documentation:
+  - changed-files:
+      any-glob-to-any-file: '**/*.md'
+
+chore:
+  - changed-files:
+      any-glob-to-any-file: '*'
+  - head-branch: '^chore'
+
+feature:
+  - head-branch: '^feat'
+
+fix:
+  - head-branch: ['^fix\(', '^hotfix']
+
+refactor:
+  - head-branch: '^refactor'
+
+test:
+  - head-branch: '^test'
+  - changed-files:
+      any-glob-to-any-file: ['**/*.spec.ts', '**/*.test.ts', '**/*.spec.tsx', '**/*.test.tsx']
+
+revert:
+  - head-branch: '^revert'
+
+style:
+  - changed-files:
+      any-glob-to-any-file: ['**/*.scss', '**/*.css']
+
+sprint1:
+  - head-branch: 'ECOMM-1*'
+
+sprint2:
+  - head-branch: 'ECOMM-2*'
+
+sprint3:
+  - head-branch: 'ECOMM-3*'
+
+sprint4:
+  - head-branch: 'ECOMM-4*'
+
+sprint5:
+  - head-branch: 'ECOMM-5*'
+
+dependencies:
+  - changed-files:
+      any-glob-to-any-file: ['package.json', 'package-lock.json']

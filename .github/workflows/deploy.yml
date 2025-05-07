@@ -1,0 +1,35 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_CTP_PROJECT_KEY: ${{ secrets.NEXT_PUBLIC_CTP_PROJECT_KEY }}
+      NEXT_PUBLIC_CTP_CLIENT_SECRET: ${{ secrets.NEXT_PUBLIC_CTP_CLIENT_SECRET }}
+      NEXT_PUBLIC_CTP_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_CTP_CLIENT_ID }}
+      NEXT_PUBLIC_CTP_REGION: ${{ secrets.NEXT_PUBLIC_CTP_REGION }}
+      NEXT_PUBLIC_CTP_AUTH_URL: ${{ secrets.NEXT_PUBLIC_CTP_AUTH_URL }}
+      NEXT_PUBLIC_CTP_API_URL: ${{ secrets.NEXT_PUBLIC_CTP_API_URL }}
+      NEXT_PUBLIC_CTP_SCOPES: ${{ secrets.NEXT_PUBLIC_CTP_SCOPES }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Deploy to Netlify
+        uses: netlify/actions/cli@master
+        with:
+          args: deploy --prod
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
