@@ -5,5 +5,9 @@ interface LayoutContentProps {
 }
 
 export default function LayoutContent({ children }: LayoutContentProps): JSX.Element {
-  return <div id="app-container">{children}</div>;
+  return (
+    <div className="w-full h-full" id="app-container">
+      {children}
+    </div>
+  );
 }
