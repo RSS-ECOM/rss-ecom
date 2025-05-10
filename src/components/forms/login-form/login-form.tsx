@@ -7,12 +7,14 @@ import { toast } from '@/hooks/use-toast';
 import { useCustomerClient } from '@/lib/customer-client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-export default function LoginForm(): JSX.Element {
+export default function LoginForm(): JSX.Element | null {
   const router = useRouter();
+  const pathname = usePathname();
   const { customerClient } = useCustomerClient();
   const FormSchema = z.object({
     email: z.string().email('Write a valid email address'),
@@ -35,6 +37,7 @@ export default function LoginForm(): JSX.Element {
   });
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
     if (await customerClient.login(data.email, data.password)) {
+      sessionStorage.setItem('authenticated', 'true');
       router.push('/products');
     } else {
       toast({
@@ -43,9 +46,15 @@ export default function LoginForm(): JSX.Element {
       });
     }
   }
+  useEffect(() => {
+    if (sessionStorage.getItem('authenticated')) {
+      router.replace('/products');
+    }
+  }, [pathname, router]);
+
   return (
     <FormProvider {...form}>
-      <form className="border-2 p-4 rounded-xl" onSubmit={() => form.handleSubmit(onSubmit)}>
+      <form className="border-2 p-4 rounded-xl" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-6">
           <FormField
             control={form.control}
