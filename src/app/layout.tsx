@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import LayoutContent from '@/components/layout/LayoutContent/LayoutContent';
 import { Toaster } from '@/components/ui/toaster';
+import { CustomerProvider } from '@/lib/customer-client';
 import '@/styles/globals.scss';
 
 export const metadata: Metadata = {
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
   return (
     <html lang="en">
       <body className="w-screen h-screen">
-        <LayoutContent>{children}</LayoutContent>
+        <CustomerProvider>
+          <LayoutContent>{children}</LayoutContent>
+        </CustomerProvider>
         <Toaster />
       </body>
     </html>
