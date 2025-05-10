@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import LayoutContent from '@/components/layout/LayoutContent/LayoutContent';
+import { Toaster } from '@/components/ui/toaster';
 import '@/styles/globals.scss';
 
 export const metadata: Metadata = {
@@ -20,8 +21,9 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
   return (
     <html lang="en">
-      <body>
+      <body className="w-screen h-screen">
         <LayoutContent>{children}</LayoutContent>
+        <Toaster />
       </body>
     </html>
   );
