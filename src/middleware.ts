@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 // 1. Specify protected and public routes
@@ -14,11 +15,11 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
   // const isPublicRoute = publicRoutes.includes(path);
 
   // 3. Put your logic to check if the user is authenticated here
-  const isLogged = false;
+  const isLogged = !!cookies().get('login')?.value;
 
   // 4. Redirect to / if the user is authenticated
   if (isProtectedRoute && isLogged) {
-    return NextResponse.redirect(new URL('/', req.nextUrl));
+    return NextResponse.redirect(new URL('/products', req.nextUrl));
   }
 
   return NextResponse.next();
