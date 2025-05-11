@@ -1,5 +1,6 @@
 'use client';
 
+import setLogin from '@/app/actions/set-login';
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -37,7 +38,7 @@ export default function LoginForm(): JSX.Element | null {
   });
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
     if (await customerClient.login(data.email, data.password)) {
-      sessionStorage.setItem('authenticated', 'true');
+      setLogin('true');
       router.push('/products');
     } else {
       toast({
