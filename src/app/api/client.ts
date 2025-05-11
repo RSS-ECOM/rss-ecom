@@ -27,51 +27,39 @@ export default class CustomerClient {
   }
 
   public async getProducts(): Promise<ProductProjectionPagedQueryResponse | null> {
-    try {
-      if (this.customerRoot) {
-        const response = await this.customerRoot.productProjections().get().execute();
-        return response.body;
-      }
-    } catch (error) {
-      return null;
+    if (this.customerRoot) {
+      const response = await this.customerRoot.productProjections().get().execute();
+      return response.body;
     }
     return null;
   }
 
-  public async login(email: string, password: string): Promise<Customer | null> {
+  public async login(email: string, password: string): Promise<Customer> {
     this.customerClient = createCustomerClient(email, password);
     this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
-    try {
-      const response = await this.customerRoot.me().get().execute();
-      return response.body;
-    } catch (error) {
-      return null;
-    }
+    const response = await this.customerRoot.me().get().execute();
+    return response.body;
   }
 
   public async register(customerParams: CustomerParams): Promise<CustomerSignInResult | null> {
-    try {
-      const customerData: CustomerDraft = {
-        addresses: customerParams.addresses,
-        dateOfBirth: customerParams.dateOfBirth,
-        defaultBillingAddress: customerParams.defaultBillingAddress,
-        defaultShippingAddress: customerParams.defaultShippingAddress,
-        email: customerParams.email,
-        firstName: customerParams.firstName,
-        lastName: customerParams.lastName,
-        password: customerParams.password,
-      };
+    const customerData: CustomerDraft = {
+      addresses: customerParams.addresses,
+      dateOfBirth: customerParams.dateOfBirth,
+      defaultBillingAddress: customerParams.defaultBillingAddress,
+      defaultShippingAddress: customerParams.defaultShippingAddress,
+      email: customerParams.email,
+      firstName: customerParams.firstName,
+      lastName: customerParams.lastName,
+      password: customerParams.password,
+    };
 
-      const response = await this.ctpClient.execute({
-        body: customerData,
-        method: 'POST',
-        uri: `/${projectKey}/me/signup`,
-      });
-      if (isCustomer(response.body)) {
-        return response.body;
-      }
-    } catch (error) {
-      return null;
+    const response = await this.ctpClient.execute({
+      body: customerData,
+      method: 'POST',
+      uri: `/${projectKey}/me/signup`,
+    });
+    if (isCustomer(response.body)) {
+      return response.body;
     }
     return null;
   }
