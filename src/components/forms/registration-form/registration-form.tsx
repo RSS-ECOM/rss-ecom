@@ -77,7 +77,18 @@ export default function RegistrationForm(): JSX.Element {
     <Form {...form}>
       <form
         className="border-2 p-4 rounded-xl w-[800px] flex flex-wrap gap-x-2.5 items-center justify-center space-y-6"
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={(e) => {
+          form
+            .handleSubmit(onSubmit)(e)
+            .catch((error) => {
+              console.error('Form submission error:', error);
+              toast({
+                description: 'An error occurred during registration',
+                title: 'Error',
+                variant: 'destructive',
+              });
+            });
+        }}
       >
         <FormField
           control={form.control}

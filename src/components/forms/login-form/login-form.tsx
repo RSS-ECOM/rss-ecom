@@ -37,13 +37,12 @@ export default function LoginForm(): JSX.Element | null {
     resolver: zodResolver(FormSchema),
   });
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
-  try {
-    const loginResult = await customerClient.login(data.email, data.password);
-    
-    if (loginResult) {
-      await setLogin('true');
-      router.push('/products');
-    } else {
+    try {
+      if (await customerClient.login(data.email, data.password)) {
+        await setLogin('true');
+        router.push('/products');
+      }
+    } catch {
       form.setValue('password', '');
       toast({
         description: 'There is no such user',
@@ -51,15 +50,7 @@ export default function LoginForm(): JSX.Element | null {
         variant: 'destructive',
       });
     }
-  } catch (error) {
-    form.setValue('password', '');
-    toast({
-      description: error instanceof Error ? error.message : 'Authentication failed',
-      title: 'Error',
-      variant: 'destructive',
-    });
   }
-}
   useEffect(() => {
     if (sessionStorage.getItem('authenticated')) {
       router.replace('/products');
@@ -68,7 +59,21 @@ export default function LoginForm(): JSX.Element | null {
 
   return (
     <FormProvider {...form}>
-      <form className="border-2 p-4 rounded-xl" onSubmit={form.handleSubmit(onSubmit)}>
+      <form
+        className="border-2 p-4 rounded-xl"
+        onSubmit={(e) => {
+          form
+            .handleSubmit(onSubmit)(e)
+            .catch((error) => {
+              console.error('Form submission error:', error);
+              toast({
+                description: 'An error occurred during login',
+                title: 'Error',
+                variant: 'destructive',
+              });
+            });
+        }}
+      >
         <div className="flex flex-col gap-6">
           <FormField
             control={form.control}

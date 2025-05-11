@@ -81,6 +81,7 @@ module.exports = {
       },
     ],
     'max-lines-per-function': ['error', { max: 200, skipBlankLines: true, skipComments: true }],
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-restricted-globals': 'off',
     'no-shadow': 'off',
     'no-use-before-define': 'off',
