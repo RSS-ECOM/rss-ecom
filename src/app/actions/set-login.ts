@@ -2,6 +2,13 @@
 
 import { cookies } from 'next/headers';
 
-export default function setLogin(isAuthenticated: string): void {
-  cookies().set('login', isAuthenticated);
+function setCookiesAsync(isAuthenticated: string): Promise<void> {
+  return new Promise((resolve) => {
+    cookies().set('login', isAuthenticated);
+    resolve();
+  });
+}
+
+export default async function setLogin(isAuthenticated: string): Promise<void> {
+  await setCookiesAsync(isAuthenticated);
 }

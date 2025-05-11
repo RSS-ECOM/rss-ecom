@@ -37,13 +37,17 @@ export default function LoginForm(): JSX.Element | null {
     resolver: zodResolver(FormSchema),
   });
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
-    if (await customerClient.login(data.email, data.password)) {
-      setLogin('true');
-      router.push('/products');
-    } else {
+    try {
+      if (await customerClient.login(data.email, data.password)) {
+        await setLogin('true');
+        router.push('/products');
+      }
+    } catch {
+      form.setValue('password', '');
       toast({
         description: 'There is no such user',
         title: 'Invalid data',
+        variant: 'destructive',
       });
     }
   }
