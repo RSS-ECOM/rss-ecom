@@ -37,12 +37,13 @@ export default function LoginForm(): JSX.Element | null {
     resolver: zodResolver(FormSchema),
   });
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
-    try {
-      if (await customerClient.login(data.email, data.password)) {
-        await setLogin('true');
-        router.push('/products');
-      }
-    } catch {
+  try {
+    const loginResult = await customerClient.login(data.email, data.password);
+    
+    if (loginResult) {
+      await setLogin('true');
+      router.push('/products');
+    } else {
       form.setValue('password', '');
       toast({
         description: 'There is no such user',
@@ -50,7 +51,15 @@ export default function LoginForm(): JSX.Element | null {
         variant: 'destructive',
       });
     }
+  } catch (error) {
+    form.setValue('password', '');
+    toast({
+      description: error instanceof Error ? error.message : 'Authentication failed',
+      title: 'Error',
+      variant: 'destructive',
+    });
   }
+}
   useEffect(() => {
     if (sessionStorage.getItem('authenticated')) {
       router.replace('/products');
