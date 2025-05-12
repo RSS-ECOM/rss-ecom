@@ -24,7 +24,7 @@ export default function HomePage(): JSX.Element {
                 <Link href="/products">Browse Books</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/sign-up">Join Our Community</Link>
+                <Link href="/login">Join Our Community</Link>
               </Button>
             </div>
 
