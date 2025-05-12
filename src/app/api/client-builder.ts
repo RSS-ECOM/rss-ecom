@@ -1,3 +1,5 @@
+import type { RefreshAuthMiddlewareOptions } from '@commercetools/ts-client';
+
 import {
   type AuthMiddlewareOptions,
   type Client,
@@ -5,6 +7,8 @@ import {
   type HttpMiddlewareOptions,
   type PasswordAuthMiddlewareOptions,
 } from '@commercetools/ts-client';
+
+import myTokenCache from './token-cache';
 
 const scopes: string[] = process.env.NEXT_PUBLIC_CTP_SCOPES.split(' ');
 export const projectKey: string = process.env.NEXT_PUBLIC_CTP_PROJECT_KEY;
@@ -25,6 +29,22 @@ const authMiddlewareOptions: AuthMiddlewareOptions = {
   scopes,
 };
 
+export const createRefreshCustomerClient = (refreshToken: string): Client => {
+  const options: RefreshAuthMiddlewareOptions = {
+    credentials: {
+      clientId: process.env.NEXT_PUBLIC_CTP_CLIENT_ID,
+      clientSecret: process.env.NEXT_PUBLIC_CTP_CLIENT_SECRET,
+    },
+    host: process.env.NEXT_PUBLIC_CTP_AUTH_URL,
+    httpClient: fetch,
+    projectKey,
+    refreshToken,
+    tokenCache: myTokenCache.tokenCache,
+  };
+  const client = new ClientBuilder().withRefreshTokenFlow(options).withHttpMiddleware(httpMiddlewareOptions).build();
+  return client;
+};
+
 export const createCustomerClient = (email: string, password: string): Client => {
   const authMiddlewareOptionsToLogin: PasswordAuthMiddlewareOptions = {
     credentials: {
@@ -39,6 +59,7 @@ export const createCustomerClient = (email: string, password: string): Client =>
     httpClient: fetch,
     projectKey,
     scopes,
+    tokenCache: myTokenCache.tokenCache,
   };
   return new ClientBuilder()
     .withPasswordFlow(authMiddlewareOptionsToLogin)

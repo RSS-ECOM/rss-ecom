@@ -1,3 +1,5 @@
+'use server';
+
 import { cookies } from 'next/headers';
 
 function setCookiesAsync(isAuthenticated: string): Promise<void> {

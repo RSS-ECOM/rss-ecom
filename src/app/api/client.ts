@@ -8,8 +8,9 @@ import {
   type ProductProjectionPagedQueryResponse,
   createApiBuilderFromCtpClient,
 } from '@commercetools/platform-sdk';
+import Cookies from 'js-cookie';
 
-import { createCtpClient, createCustomerClient, projectKey } from './client-builder';
+import { createCtpClient, createCustomerClient, createRefreshCustomerClient, projectKey } from './client-builder';
 
 function isCustomer(obj: unknown): obj is CustomerSignInResult {
   return typeof obj === 'object';
@@ -24,6 +25,10 @@ export default class CustomerClient {
 
   constructor() {
     this.ctpClient = createCtpClient();
+    const token = Cookies.get('login');
+    if (token) {
+      this.customerClient = createRefreshCustomerClient(token);
+    }
   }
 
   public async getProducts(): Promise<ProductProjectionPagedQueryResponse | null> {
@@ -62,6 +67,14 @@ export default class CustomerClient {
       return response.body;
     }
     return null;
+  }
+
+  public update(): void {
+    const token = Cookies.get('login');
+    if (token) {
+      this.customerClient = createRefreshCustomerClient(token);
+      this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
+    }
   }
 }
 
