@@ -1,11 +1,10 @@
-import type { RefreshAuthMiddlewareOptions } from '@commercetools/ts-client';
-
 import {
   type AuthMiddlewareOptions,
   type Client,
   ClientBuilder,
   type HttpMiddlewareOptions,
   type PasswordAuthMiddlewareOptions,
+  type RefreshAuthMiddlewareOptions,
 } from '@commercetools/ts-client';
 
 import myTokenCache from './token-cache';
