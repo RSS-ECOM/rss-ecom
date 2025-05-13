@@ -8,7 +8,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+// eslint-disable-next-line perfectionist/sort-imports
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/auth-context';
 import { toast } from '@/hooks/use-toast';
 import { useCustomerClient } from '@/lib/customer-client';
 import { cn } from '@/lib/utils';
@@ -18,8 +21,6 @@ import { CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-// eslint-disable-next-line perfectionist/sort-imports
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const FormSchema = z
   .object({
@@ -48,21 +49,44 @@ const FormSchema = z
         message: 'Password must contain at least one uppercase letter',
       }),
     sameBillShip: z.boolean(),
-    shipCity: z.string().min(1, 'Your ship city is required'),
-    shipCountry: z.string().min(1, 'Country is required'),
-    shipPostalCode: z.string().min(1, 'Your ship postal code is required'),
+    shipCity: z.string().optional(),
+    shipCountry: z.string().optional(),
+    shipPostalCode: z.string().optional(),
     shipSetDefault: z.boolean(),
-    shipStreet: z.string().min(1, 'Your ship street is required'),
+    shipStreet: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.sameBillShip) {
+        return true;
+      }
+
+      return (
+        !!data.shipCity &&
+        data.shipCity.length > 0 &&
+        !!data.shipCountry &&
+        data.shipCountry.length > 0 &&
+        !!data.shipPostalCode &&
+        data.shipPostalCode.length > 0 &&
+        !!data.shipStreet &&
+        data.shipStreet.length > 0
+      );
+    },
+    {
+      message: 'Shipping address fields are required when using different addresses',
+      path: ['shipCity'],
+    },
+  );
 
 // eslint-disable-next-line max-lines-per-function
 export default function RegistrationForm(): JSX.Element {
   const { customerClient } = useCustomerClient();
   const router = useRouter();
+  const { login } = useAuth();
   const form = useForm<z.infer<typeof FormSchema>>({
     defaultValues: {
       billCity: '',
@@ -87,7 +111,6 @@ export default function RegistrationForm(): JSX.Element {
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
-    console.log('onSubmit called with data:', data);
     try {
       const customerParams = {
         addresses: [
@@ -108,11 +131,16 @@ export default function RegistrationForm(): JSX.Element {
       };
 
       if (!data.sameBillShip) {
+        const shipCity = data.shipCity || data.billCity;
+        const shipCountry = data.shipCountry || data.billCountry;
+        const shipPostalCode = data.shipPostalCode || data.billPostalCode;
+        const shipStreet = data.shipStreet || data.billStreet;
+
         customerParams.addresses.push({
-          city: data.shipCity,
-          country: data.shipCountry,
-          postalCode: data.shipPostalCode,
-          streetName: data.shipStreet,
+          city: shipCity || '',
+          country: shipCountry || 'US',
+          postalCode: shipPostalCode || '',
+          streetName: shipStreet || '',
         });
       }
 
@@ -123,7 +151,7 @@ export default function RegistrationForm(): JSX.Element {
 
         if (myTokenCache.refreshToken) {
           await setLogin(myTokenCache.refreshToken);
-          localStorage.setItem('isLoggedIn', 'true');
+          login();
         }
 
         toast({
@@ -148,7 +176,6 @@ export default function RegistrationForm(): JSX.Element {
       <form
         className="border-2 p-4 rounded-xl w-[800px] flex flex-wrap gap-x-2.5 items-center justify-center space-y-6"
         onSubmit={(e) => {
-          console.log('Form submission started');
           form
             .handleSubmit(onSubmit)(e)
             .catch((error) => {
@@ -368,11 +395,18 @@ export default function RegistrationForm(): JSX.Element {
                     if (value) {
                       const billCity = form.getValues('billCity');
                       const billCountry = form.getValues('billCountry');
+                      const billStreet = form.getValues('billStreet');
+                      const billPostalCode = form.getValues('billPostalCode');
+
                       form.setValue('shipCity', billCity);
                       form.setValue('shipCountry', billCountry);
+                      form.setValue('shipStreet', billStreet);
+                      form.setValue('shipPostalCode', billPostalCode);
                     } else {
                       form.setValue('shipCity', '');
                       form.setValue('shipCountry', '');
+                      form.setValue('shipStreet', '');
+                      form.setValue('shipPostalCode', '');
                     }
                   }}
                 />
@@ -515,17 +549,6 @@ export default function RegistrationForm(): JSX.Element {
         />
 
         <Separator />
-
-        <Button
-          onClick={() => {
-            console.log('Current form state:', form.getValues());
-            console.log('Form errors:', form.formState.errors);
-            console.log('Is form valid:', form.formState.isValid);
-          }}
-          type="button"
-        >
-          Debug Form
-        </Button>
 
         <Button className="w-full" type="submit">
           Register

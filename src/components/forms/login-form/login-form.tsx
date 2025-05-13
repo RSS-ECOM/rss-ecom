@@ -5,19 +5,22 @@ import myTokenCache from '@/app/api/token-cache';
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/auth-context';
 import { toast } from '@/hooks/use-toast';
 import { useCustomerClient } from '@/lib/customer-client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 export default function LoginForm(): JSX.Element | null {
   const router = useRouter();
-  const pathname = usePathname();
+  const { isLoggedIn, login } = useAuth();
   const { customerClient } = useCustomerClient();
+  const [isLoading, setIsLoading] = useState(true);
+
   const FormSchema = z.object({
     email: z.string().email('Write a valid email address'),
     password: z
@@ -30,6 +33,7 @@ export default function LoginForm(): JSX.Element | null {
         message: 'Password must contain at least one uppercase letter',
       }),
   });
+
   const form = useForm<z.infer<typeof FormSchema>>({
     defaultValues: {
       email: '',
@@ -37,29 +41,78 @@ export default function LoginForm(): JSX.Element | null {
     },
     resolver: zodResolver(FormSchema),
   });
+
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
     try {
       if (await customerClient.login(data.email, data.password)) {
         if (myTokenCache.refreshToken) {
-          await setLogin(myTokenCache.refreshToken);
-          localStorage.setItem('isLoggedIn', 'true');
+          try {
+            await setLogin(myTokenCache.refreshToken);
+            login();
+            toast({
+              description: 'Successfully logged in',
+              title: 'Welcome back!',
+            });
+            router.push('/products');
+          } catch (tokenError) {
+            console.error('Token error:', tokenError);
+            toast({
+              description: 'Failed to set login token',
+              title: 'Authentication error',
+              variant: 'destructive',
+            });
+          }
+        } else {
+          toast({
+            description: 'No authentication token received',
+            title: 'Login failed',
+            variant: 'destructive',
+          });
         }
-        router.push('/products');
+      } else {
+        form.setValue('password', '');
+        toast({
+          description: 'Invalid credentials',
+          title: 'Login failed',
+          variant: 'destructive',
+        });
       }
-    } catch {
+    } catch (error) {
+      console.error('Login error:', error);
       form.setValue('password', '');
       toast({
-        description: 'There is no such user',
+        description: error instanceof Error ? error.message : 'There is no such user',
         title: 'Invalid data',
         variant: 'destructive',
       });
     }
   }
+
   useEffect(() => {
-    if (sessionStorage.getItem('authenticated')) {
-      router.replace('/products');
+    if (typeof window !== 'undefined') {
+      const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+
+      if (isAuthenticated || isLoggedIn) {
+        router.replace('/products');
+      }
+
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
     }
-  }, [pathname, router]);
+  }, [isLoggedIn, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-24">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (isLoggedIn) {
+    return null;
+  }
 
   return (
     <FormProvider {...form}>

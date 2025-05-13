@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import LayoutContent from '@/components/layout/LayoutContent/LayoutContent';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/contexts/auth-context';
 import { CustomerProvider } from '@/lib/customer-client';
 import ThemeProvider from '@/providers/theme-provider';
 import '@/styles/globals.scss';
@@ -26,12 +27,14 @@ export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <CustomerProvider>
-            <LayoutContent>{children}</LayoutContent>
-            <Toaster />
-          </CustomerProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <CustomerProvider>
+              <LayoutContent>{children}</LayoutContent>
+              <Toaster />
+            </CustomerProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

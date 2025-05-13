@@ -12,37 +12,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-// import { useCustomerClient } from '@/lib/customer-client';
+import { useAuth } from '@/contexts/auth-context';
 import { Book, ChevronDown, Menu, MoonIcon, Search, ShoppingCart, SunIcon, User, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 // eslint-disable-next-line max-lines-per-function
 export default function Header(): JSX.Element {
-  // const { customerClient } = useCustomerClient();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, logout } = useAuth();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { setTheme, theme } = useTheme();
 
-  useEffect(() => {
-    const loginState = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(loginState);
-  }, []);
-
-  const handleLogout = useCallback(() => {
-    setLogin(null)
-      .then(() => {
-        localStorage.removeItem('isLoggedIn');
-        setIsLoggedIn(false);
-        window.location.href = '/';
-      })
-      .catch((error) => {
-        console.error('Logout failed:', error);
-      });
-  }, []);
+  const handleLogout = useCallback(async () => {
+    try {
+      await setLogin(null);
+      await logout();
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }, [logout]);
+  const handleLogoutClick = useCallback(() => {
+    handleLogout().catch((error) => {
+      console.error('Logout error:', error);
+    });
+  }, [handleLogout]);
 
   const isActive = (path: string): boolean => pathname === path;
 
@@ -169,7 +166,7 @@ export default function Header(): JSX.Element {
                       <Link href="/account/wishlist">My Wishlist</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogoutClick}>Logout</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
