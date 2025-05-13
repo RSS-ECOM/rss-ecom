@@ -33,9 +33,9 @@ export default function Header(): JSX.Element {
   }, []);
 
   const handleLogout = useCallback(() => {
-    setLogin('false')
+    setLogin(null)
       .then(() => {
-        localStorage.setItem('isLoggedIn', 'false');
+        localStorage.removeItem('isLoggedIn');
         setIsLoggedIn(false);
         window.location.href = '/';
       })

@@ -42,6 +42,7 @@ export default function LoginForm(): JSX.Element | null {
       if (await customerClient.login(data.email, data.password)) {
         if (myTokenCache.refreshToken) {
           await setLogin(myTokenCache.refreshToken);
+          localStorage.setItem('isLoggedIn', 'true');
         }
         router.push('/products');
       }

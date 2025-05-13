@@ -9,6 +9,10 @@ function setCookiesAsync(isAuthenticated: string): Promise<void> {
   });
 }
 
-export default async function setLogin(isAuthenticated: string): Promise<void> {
-  await setCookiesAsync(isAuthenticated);
+export default async function setLogin(isAuthenticated: null | string): Promise<void> {
+  if (isAuthenticated) {
+    await setCookiesAsync(isAuthenticated);
+  } else {
+    cookies().delete('login');
+  }
 }
