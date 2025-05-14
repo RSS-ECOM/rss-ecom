@@ -17,6 +17,12 @@ const useAuthStore = create<AuthState>()(
       logout: async (): Promise<void> => {
         await setLogin(null);
         set({ isLoggedIn: false });
+
+        try {
+          window.localStorage.setItem('auth-storage', JSON.stringify({ state: { isLoggedIn: false }, version: 0 }));
+        } catch (e) {
+          console.error('Error in localStorage:', e);
+        }
       },
     }),
     {

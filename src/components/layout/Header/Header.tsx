@@ -2,7 +2,6 @@
 
 'use client';
 
-import setLogin from '@/app/actions/set-login';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,21 +27,9 @@ export default function Header(): JSX.Element {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { setTheme, theme } = useTheme();
 
-  const handleLogout = useCallback(async () => {
-    try {
-      await setLogin(null);
-      logout();
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  }, [logout]);
-
   const handleLogoutClick = useCallback(() => {
-    handleLogout().catch((error) => {
-      console.error('Error during logout:', error);
-    });
-  }, [handleLogout]);
+    logout();
+  }, [logout]);
 
   const isActive = (path: string): boolean => pathname === path;
 

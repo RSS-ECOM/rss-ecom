@@ -92,7 +92,9 @@ export function useCustomer() {
     },
     onSuccess: () => {
       queryClient.clear();
-      router.push('/');
+      setTimeout(() => {
+        router.push('/');
+      }, 100);
     },
   });
 
