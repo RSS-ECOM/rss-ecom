@@ -6,7 +6,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { useCustomer } from '@/hooks/use-customer';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,46 +17,85 @@ import { CalendarIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const FormSchema = z.object({
-  billCity: z.string().min(1, 'Your bill city is required'),
-  billPostalCode: z.string().min(1, 'Your bill postal code is required'),
-  billSetDefault: z.boolean(),
-  billStreet: z.string().min(1, 'Your bill street is required'),
-  dateOfBirth: z.date({ required_error: 'Choose your birthday' }),
-  email: z.string().email('Write a valid email address'),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  password: z
-    .string()
-    .min(5, 'Password must be at least 5 characters')
-    .refine((val) => /[a-z]/.test(val), {
-      message: 'Password must contain at least one lowercase letter',
-    })
-    .refine((val) => /[A-Z]/.test(val), {
-      message: 'Password must contain at least one uppercase letter',
-    }),
-  sameBillShip: z.boolean(),
-  shipCity: z.string().min(1, 'Your ship city is required'),
-  shipPostalCode: z.string().min(1, 'Your ship postal code is required'),
-  shipSetDefault: z.boolean(),
-  shipStreet: z.string().min(1, 'Your ship street is required'),
-});
+const FormSchema = z
+  .object({
+    billCity: z.string().min(1, 'Your bill city is required'),
+    billCountry: z.string().min(1, 'Country is required'),
+    billPostalCode: z.string().min(1, 'Your bill postal code is required'),
+    billSetDefault: z.boolean(),
+    billStreet: z.string().min(1, 'Your bill street is required'),
+    confirmPassword: z.string(),
+    dateOfBirth: z
+      .date({
+        invalid_type_error: 'Choose a valid date',
+        required_error: 'Choose your birthday',
+      })
+      .nullable(),
+    email: z.string().email('Write a valid email address'),
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    password: z
+      .string()
+      .min(5, 'Password must be at least 5 characters')
+      .refine((val) => /[a-z]/.test(val), {
+        message: 'Password must contain at least one lowercase letter',
+      })
+      .refine((val) => /[A-Z]/.test(val), {
+        message: 'Password must contain at least one uppercase letter',
+      }),
+    sameBillShip: z.boolean(),
+    shipCity: z.string().optional(),
+    shipCountry: z.string().optional(),
+    shipPostalCode: z.string().optional(),
+    shipSetDefault: z.boolean(),
+    shipStreet: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  })
+  .refine(
+    (data) => {
+      if (data.sameBillShip) {
+        return true;
+      }
+
+      return (
+        !!data.shipCity &&
+        data.shipCity.length > 0 &&
+        !!data.shipCountry &&
+        data.shipCountry.length > 0 &&
+        !!data.shipPostalCode &&
+        data.shipPostalCode.length > 0 &&
+        !!data.shipStreet &&
+        data.shipStreet.length > 0
+      );
+    },
+    {
+      message: 'Shipping address fields are required when using different addresses',
+      path: ['shipCity'],
+    },
+  );
 
 // eslint-disable-next-line max-lines-per-function
 export default function RegistrationForm(): JSX.Element {
+  const { isRegisterLoading, register } = useCustomer();
   const form = useForm<z.infer<typeof FormSchema>>({
     defaultValues: {
       billCity: '',
+      billCountry: 'US',
       billPostalCode: '',
       billSetDefault: true,
       billStreet: '',
-      dateOfBirth: undefined,
+      confirmPassword: '',
+      dateOfBirth: new Date('2000-01-01'),
       email: '',
       firstName: '',
       lastName: '',
       password: '',
       sameBillShip: true,
       shipCity: '',
+      shipCountry: 'US',
       shipPostalCode: '',
       shipSetDefault: true,
       shipStreet: '',
@@ -63,14 +104,39 @@ export default function RegistrationForm(): JSX.Element {
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>): void {
-    toast({
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      title: 'You submitted the following values:',
-    });
+    const customerParams = {
+      addresses: [
+        {
+          city: data.billCity,
+          country: data.billCountry,
+          postalCode: data.billPostalCode,
+          streetName: data.billStreet,
+        },
+      ],
+      dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : '2000-01-01',
+      defaultBillingAddress: data.billSetDefault ? 0 : 0,
+      defaultShippingAddress: data.sameBillShip ? 0 : 1,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      password: data.password,
+    };
+
+    if (!data.sameBillShip) {
+      const shipCity = data.shipCity || data.billCity;
+      const shipCountry = data.shipCountry || data.billCountry;
+      const shipPostalCode = data.shipPostalCode || data.billPostalCode;
+      const shipStreet = data.shipStreet || data.billStreet;
+
+      customerParams.addresses.push({
+        city: shipCity || '',
+        country: shipCountry || 'US',
+        postalCode: shipPostalCode || '',
+        streetName: shipStreet || '',
+      });
+    }
+
+    register(customerParams);
   }
 
   return (
@@ -97,7 +163,7 @@ export default function RegistrationForm(): JSX.Element {
             <FormItem className="grow basis-full">
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="your.email@gmail.com" type="email" {...field} />
+                <Input placeholder="your.email@gmail.com" type="email" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -151,15 +217,89 @@ export default function RegistrationForm(): JSX.Element {
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-auto p-0">
+                  <div className="p-3 border-b flex justify-between">
+                    <select
+                      className="text-sm border rounded px-2 py-1"
+                      onChange={(e) => {
+                        const newYear = parseInt(e.target.value, 10);
+                        const currentDate = field.value || new Date();
+                        const newDate = new Date(currentDate);
+                        newDate.setFullYear(newYear);
+                        field.onChange(newDate);
+                      }}
+                      value={field.value ? new Date(field.value).getFullYear() : 2000}
+                    >
+                      {Array.from({ length: 100 }, (_, i) => (
+                        <option key={i} value={2010 - i}>
+                          {2010 - i}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="text-sm border rounded px-2 py-1"
+                      onChange={(e) => {
+                        const newMonth = parseInt(e.target.value, 10);
+                        const currentDate = field.value || new Date();
+                        const newDate = new Date(currentDate);
+                        newDate.setMonth(newMonth);
+                        field.onChange(newDate);
+                      }}
+                      value={field.value ? new Date(field.value).getMonth() : 0}
+                    >
+                      {[
+                        'January',
+                        'February',
+                        'March',
+                        'April',
+                        'May',
+                        'June',
+                        'July',
+                        'August',
+                        'September',
+                        'October',
+                        'November',
+                        'December',
+                      ].map((month, i) => (
+                        <option key={i} value={i}>
+                          {month}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <Calendar
                     disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                     initialFocus
                     mode="single"
                     onSelect={field.onChange}
-                    selected={field.value}
+                    selected={field.value || undefined}
                   />
                 </PopoverContent>
               </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="billCountry"
+          render={({ field }) => (
+            <FormItem className="grow basis-2/5">
+              <FormLabel>Billing Country</FormLabel>
+              <Select defaultValue={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a country" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="US">United States</SelectItem>
+                  <SelectItem value="CA">Canada</SelectItem>
+                  <SelectItem value="GB">United Kingdom</SelectItem>
+                  <SelectItem value="FR">France</SelectItem>
+                  <SelectItem value="DE">Germany</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -198,7 +338,7 @@ export default function RegistrationForm(): JSX.Element {
           name="billStreet"
           render={({ field }) => (
             <FormItem className="grow basis-2/5">
-              <FormLabel>Billing postal code</FormLabel>
+              <FormLabel>Billing street</FormLabel>
               <FormControl>
                 <Input placeholder="street" {...field} />
               </FormControl>
@@ -222,9 +362,19 @@ export default function RegistrationForm(): JSX.Element {
 
                     if (value) {
                       const billCity = form.getValues('billCity');
+                      const billCountry = form.getValues('billCountry');
+                      const billStreet = form.getValues('billStreet');
+                      const billPostalCode = form.getValues('billPostalCode');
+
                       form.setValue('shipCity', billCity);
+                      form.setValue('shipCountry', billCountry);
+                      form.setValue('shipStreet', billStreet);
+                      form.setValue('shipPostalCode', billPostalCode);
                     } else {
                       form.setValue('shipCity', '');
+                      form.setValue('shipCountry', '');
+                      form.setValue('shipStreet', '');
+                      form.setValue('shipPostalCode', '');
                     }
                   }}
                 />
@@ -256,6 +406,30 @@ export default function RegistrationForm(): JSX.Element {
 
         {!form.watch('sameBillShip') && (
           <>
+            <FormField
+              control={form.control}
+              name="shipCountry"
+              render={({ field }) => (
+                <FormItem className="grow basis-2/5">
+                  <FormLabel>Shipping Country</FormLabel>
+                  <Select defaultValue={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a country" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="US">United States</SelectItem>
+                      <SelectItem value="CA">Canada</SelectItem>
+                      <SelectItem value="GB">United Kingdom</SelectItem>
+                      <SelectItem value="FR">France</SelectItem>
+                      <SelectItem value="DE">Germany</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="shipCity"
@@ -328,9 +502,25 @@ export default function RegistrationForm(): JSX.Element {
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem className="grow basis-2/5">
+              <FormLabel>Confirm Password</FormLabel>
+              <FormControl>
+                <Input placeholder="confirm password" type="password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <Separator />
 
-        <Button type="submit">Submit</Button>
+        <Button className="w-full" disabled={isRegisterLoading} type="submit">
+          {isRegisterLoading ? 'Registering...' : 'Register'}
+        </Button>
       </form>
     </Form>
   );

@@ -12,37 +12,37 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-// import { useCustomerClient } from '@/lib/customer-client';
+import { useCustomer } from '@/hooks/use-customer';
+import useAuthStore from '@/store/auth-store';
 import { Book, ChevronDown, Menu, MoonIcon, Search, ShoppingCart, SunIcon, User, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 // eslint-disable-next-line max-lines-per-function
 export default function Header(): JSX.Element {
-  // const { customerClient } = useCustomerClient();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { logout } = useCustomer();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { setTheme, theme } = useTheme();
 
-  useEffect(() => {
-    const loginState = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(loginState);
-  }, []);
+  const handleLogout = useCallback(async () => {
+    try {
+      await setLogin(null);
+      logout();
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }, [logout]);
 
-  const handleLogout = useCallback(() => {
-    setLogin('false')
-      .then(() => {
-        localStorage.setItem('isLoggedIn', 'false');
-        setIsLoggedIn(false);
-        window.location.href = '/';
-      })
-      .catch((error) => {
-        console.error('Logout failed:', error);
-      });
-  }, []);
+  const handleLogoutClick = useCallback(() => {
+    handleLogout().catch((error) => {
+      console.error('Error during logout:', error);
+    });
+  }, [handleLogout]);
 
   const isActive = (path: string): boolean => pathname === path;
 
@@ -169,7 +169,7 @@ export default function Header(): JSX.Element {
                       <Link href="/account/wishlist">My Wishlist</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogoutClick}>Logout</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>

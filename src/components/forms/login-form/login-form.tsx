@@ -1,23 +1,23 @@
 'use client';
 
-import setLogin from '@/app/actions/set-login';
-import myTokenCache from '@/app/api/token-cache';
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/hooks/use-toast';
-import { useCustomerClient } from '@/lib/customer-client';
+import { useCustomer } from '@/hooks/use-customer';
+import useAuthStore from '@/store/auth-store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 export default function LoginForm(): JSX.Element | null {
   const router = useRouter();
-  const pathname = usePathname();
-  const { customerClient } = useCustomerClient();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { isLoginLoading, login } = useCustomer();
+  const [isLoading, setIsLoading] = useState(true);
+
   const FormSchema = z.object({
     email: z.string().email('Write a valid email address'),
     password: z
@@ -30,6 +30,7 @@ export default function LoginForm(): JSX.Element | null {
         message: 'Password must contain at least one uppercase letter',
       }),
   });
+
   const form = useForm<z.infer<typeof FormSchema>>({
     defaultValues: {
       email: '',
@@ -37,28 +38,36 @@ export default function LoginForm(): JSX.Element | null {
     },
     resolver: zodResolver(FormSchema),
   });
-  async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
-    try {
-      if (await customerClient.login(data.email, data.password)) {
-        if (myTokenCache.refreshToken) {
-          await setLogin(myTokenCache.refreshToken);
-        }
-        router.push('/products');
-      }
-    } catch {
-      form.setValue('password', '');
-      toast({
-        description: 'There is no such user',
-        title: 'Invalid data',
-        variant: 'destructive',
-      });
-    }
+
+  function onSubmit(data: z.infer<typeof FormSchema>): void {
+    login({
+      email: data.email,
+      password: data.password,
+    });
   }
+
   useEffect(() => {
-    if (sessionStorage.getItem('authenticated')) {
-      router.replace('/products');
+    if (typeof window !== 'undefined') {
+      if (isLoggedIn) {
+        router.replace('/products');
+      }
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
     }
-  }, [pathname, router]);
+  }, [isLoggedIn, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-24">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (isLoggedIn) {
+    return null;
+  }
 
   return (
     <FormProvider {...form}>
@@ -69,11 +78,6 @@ export default function LoginForm(): JSX.Element | null {
             .handleSubmit(onSubmit)(e)
             .catch((error) => {
               console.error('Form submission error:', error);
-              toast({
-                description: 'An error occurred during login',
-                title: 'Error',
-                variant: 'destructive',
-              });
             });
         }}
       >
@@ -104,8 +108,8 @@ export default function LoginForm(): JSX.Element | null {
               </FormItem>
             )}
           />
-          <Button className="w-full" type="submit">
-            Login
+          <Button className="w-full" disabled={isLoginLoading} type="submit">
+            {isLoginLoading ? 'Logging in...' : 'Login'}
           </Button>
         </div>
         <div className="mt-4 text-center text-sm">
