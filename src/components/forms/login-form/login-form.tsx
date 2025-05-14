@@ -1,13 +1,10 @@
 'use client';
 
-import setLogin from '@/app/actions/set-login';
-import myTokenCache from '@/app/api/token-cache';
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/contexts/auth-context';
-import { toast } from '@/hooks/use-toast';
-import { useCustomerClient } from '@/lib/customer-client';
+import { useCustomer } from '@/hooks/use-customer';
+import useAuthStore from '@/store/auth-store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -17,8 +14,8 @@ import { z } from 'zod';
 
 export default function LoginForm(): JSX.Element | null {
   const router = useRouter();
-  const { isLoggedIn, login } = useAuth();
-  const { customerClient } = useCustomerClient();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { isLoginLoading, login } = useCustomer();
   const [isLoading, setIsLoading] = useState(true);
 
   const FormSchema = z.object({
@@ -42,60 +39,18 @@ export default function LoginForm(): JSX.Element | null {
     resolver: zodResolver(FormSchema),
   });
 
-  async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
-    try {
-      if (await customerClient.login(data.email, data.password)) {
-        if (myTokenCache.refreshToken) {
-          try {
-            await setLogin(myTokenCache.refreshToken);
-            login();
-            toast({
-              description: 'Successfully logged in',
-              title: 'Welcome back!',
-            });
-            router.push('/products');
-          } catch (tokenError) {
-            console.error('Token error:', tokenError);
-            toast({
-              description: 'Failed to set login token',
-              title: 'Authentication error',
-              variant: 'destructive',
-            });
-          }
-        } else {
-          toast({
-            description: 'No authentication token received',
-            title: 'Login failed',
-            variant: 'destructive',
-          });
-        }
-      } else {
-        form.setValue('password', '');
-        toast({
-          description: 'Invalid credentials',
-          title: 'Login failed',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      form.setValue('password', '');
-      toast({
-        description: error instanceof Error ? error.message : 'There is no such user',
-        title: 'Invalid data',
-        variant: 'destructive',
-      });
-    }
+  function onSubmit(data: z.infer<typeof FormSchema>): void {
+    login({
+      email: data.email,
+      password: data.password,
+    });
   }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
-
-      if (isAuthenticated || isLoggedIn) {
+      if (isLoggedIn) {
         router.replace('/products');
       }
-
       setIsLoading(false);
     } else {
       setIsLoading(false);
@@ -123,11 +78,6 @@ export default function LoginForm(): JSX.Element | null {
             .handleSubmit(onSubmit)(e)
             .catch((error) => {
               console.error('Form submission error:', error);
-              toast({
-                description: 'An error occurred during login',
-                title: 'Error',
-                variant: 'destructive',
-              });
             });
         }}
       >
@@ -158,8 +108,8 @@ export default function LoginForm(): JSX.Element | null {
               </FormItem>
             )}
           />
-          <Button className="w-full" type="submit">
-            Login
+          <Button className="w-full" disabled={isLoginLoading} type="submit">
+            {isLoginLoading ? 'Logging in...' : 'Login'}
           </Button>
         </div>
         <div className="mt-4 text-center text-sm">

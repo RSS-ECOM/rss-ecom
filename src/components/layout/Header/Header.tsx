@@ -12,7 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/contexts/auth-context';
+import { useCustomer } from '@/hooks/use-customer';
+import useAuthStore from '@/store/auth-store';
 import { Book, ChevronDown, Menu, MoonIcon, Search, ShoppingCart, SunIcon, User, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,7 +22,8 @@ import { useCallback, useState } from 'react';
 
 // eslint-disable-next-line max-lines-per-function
 export default function Header(): JSX.Element {
-  const { isLoggedIn, logout } = useAuth();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { logout } = useCustomer();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { setTheme, theme } = useTheme();
@@ -29,15 +31,16 @@ export default function Header(): JSX.Element {
   const handleLogout = useCallback(async () => {
     try {
       await setLogin(null);
-      await logout();
+      logout();
       window.location.href = '/';
     } catch (error) {
       console.error('Logout failed:', error);
     }
   }, [logout]);
+
   const handleLogoutClick = useCallback(() => {
     handleLogout().catch((error) => {
-      console.error('Logout error:', error);
+      console.error('Error during logout:', error);
     });
   }, [handleLogout]);
 

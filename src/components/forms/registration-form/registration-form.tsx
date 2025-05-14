@@ -1,24 +1,19 @@
 'use client';
 
-import setLogin from '@/app/actions/set-login';
-import myTokenCache from '@/app/api/token-cache';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-// eslint-disable-next-line perfectionist/sort-imports
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/contexts/auth-context';
+import { useCustomer } from '@/hooks/use-customer';
 import { toast } from '@/hooks/use-toast';
-import { useCustomerClient } from '@/lib/customer-client';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -84,9 +79,7 @@ const FormSchema = z
 
 // eslint-disable-next-line max-lines-per-function
 export default function RegistrationForm(): JSX.Element {
-  const { customerClient } = useCustomerClient();
-  const router = useRouter();
-  const { login } = useAuth();
+  const { isRegisterLoading, register } = useCustomer();
   const form = useForm<z.infer<typeof FormSchema>>({
     defaultValues: {
       billCity: '',
@@ -110,65 +103,40 @@ export default function RegistrationForm(): JSX.Element {
     resolver: zodResolver(FormSchema),
   });
 
-  async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
-    try {
-      const customerParams = {
-        addresses: [
-          {
-            city: data.billCity,
-            country: data.billCountry,
-            postalCode: data.billPostalCode,
-            streetName: data.billStreet,
-          },
-        ],
-        dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : '2000-01-01',
-        defaultBillingAddress: data.billSetDefault ? 0 : 0,
-        defaultShippingAddress: data.sameBillShip ? 0 : 1,
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        password: data.password,
-      };
+  function onSubmit(data: z.infer<typeof FormSchema>): void {
+    const customerParams = {
+      addresses: [
+        {
+          city: data.billCity,
+          country: data.billCountry,
+          postalCode: data.billPostalCode,
+          streetName: data.billStreet,
+        },
+      ],
+      dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : '2000-01-01',
+      defaultBillingAddress: data.billSetDefault ? 0 : 0,
+      defaultShippingAddress: data.sameBillShip ? 0 : 1,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      password: data.password,
+    };
 
-      if (!data.sameBillShip) {
-        const shipCity = data.shipCity || data.billCity;
-        const shipCountry = data.shipCountry || data.billCountry;
-        const shipPostalCode = data.shipPostalCode || data.billPostalCode;
-        const shipStreet = data.shipStreet || data.billStreet;
+    if (!data.sameBillShip) {
+      const shipCity = data.shipCity || data.billCity;
+      const shipCountry = data.shipCountry || data.billCountry;
+      const shipPostalCode = data.shipPostalCode || data.billPostalCode;
+      const shipStreet = data.shipStreet || data.billStreet;
 
-        customerParams.addresses.push({
-          city: shipCity || '',
-          country: shipCountry || 'US',
-          postalCode: shipPostalCode || '',
-          streetName: shipStreet || '',
-        });
-      }
-
-      const result = await customerClient.register(customerParams);
-
-      if (result) {
-        await customerClient.login(data.email, data.password);
-
-        if (myTokenCache.refreshToken) {
-          await setLogin(myTokenCache.refreshToken);
-          login();
-        }
-
-        toast({
-          description: 'Your account has been created successfully',
-          title: 'Success!',
-        });
-
-        router.push('/products');
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast({
-        description: 'Registration failed. Email may already be in use.',
-        title: 'Error',
-        variant: 'destructive',
+      customerParams.addresses.push({
+        city: shipCity || '',
+        country: shipCountry || 'US',
+        postalCode: shipPostalCode || '',
+        streetName: shipStreet || '',
       });
     }
+
+    register(customerParams);
   }
 
   return (
@@ -550,8 +518,8 @@ export default function RegistrationForm(): JSX.Element {
 
         <Separator />
 
-        <Button className="w-full" type="submit">
-          Register
+        <Button className="w-full" disabled={isRegisterLoading} type="submit">
+          {isRegisterLoading ? 'Registering...' : 'Register'}
         </Button>
       </form>
     </Form>
