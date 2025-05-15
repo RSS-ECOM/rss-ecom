@@ -135,3 +135,23 @@
     --forge-orange-1200: #f39c12; // hover footer links
   }
 }
+
+.page-content {
+  perspective: 1500px;
+  transform-style: preserve-3d;
+  height: 100%;
+}
+
+.page-texture {
+  background-image: url('/img/png/paper.jpg');
+  background-blend-mode: overlay;
+  background-size: 200px;
+  opacity: 0.03;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}

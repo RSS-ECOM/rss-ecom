@@ -69,7 +69,7 @@ function BannerSlider({ autoplay = true, banners, className, interval = 5000 }: 
 
   return (
     <div className={cn('relative w-full rounded-md overflow-hidden', className)}>
-      <Carousel className="w-full" opts={options} setApi={handleApiChange}>
+      <Carousel className="w-full z-10" opts={options} setApi={handleApiChange}>
         <CarouselContent>
           {banners.map((banner, index) => (
             <CarouselItem key={banner.id}>
