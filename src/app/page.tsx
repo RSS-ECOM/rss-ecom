@@ -8,7 +8,7 @@ import Link from 'next/link';
 // eslint-disable-next-line max-lines-per-function
 export default function HomePage(): JSX.Element {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center px-[10px]">
       <BannerSlider banners={banners} className="my-8" />
       {/* Featured Categories */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">

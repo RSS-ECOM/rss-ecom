@@ -1,5 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -13,17 +11,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useCustomer } from '@/hooks/use-customer';
 import useAuthStore from '@/store/auth-store';
-import { Book, ChevronDown, Menu, MoonIcon, Search, ShoppingCart, SunIcon, User, X } from 'lucide-react';
+import { Book, Menu, MoonIcon, Search, ShoppingCart, SunIcon, User, X } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-// eslint-disable-next-line max-lines-per-function
+import MobileMenu from '../Nav/MobileMenu';
+import NavMenu from '../Nav/NavMenu';
+
 export default function Header(): JSX.Element {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const { logout } = useCustomer();
-  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { setTheme, theme } = useTheme();
 
@@ -31,74 +29,26 @@ export default function Header(): JSX.Element {
     logout();
   }, [logout]);
 
-  const isActive = (path: string): boolean => pathname === path;
+  useEffect(() => {
+    const handleResize = (): void => {
+      if (window.innerWidth >= 768) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return (): void => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 hidden md:flex">
+        <div className="mr-4 hidden md:flex items-center">
           <Link className="mr-6 flex items-center space-x-2" href="/">
             <Book className="h-6 w-6 text-primary" />
             <span className="font-bold text-xl">Story Hive</span>
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="px-2" variant="ghost">
-                  Books <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link className="w-full" href="/products">
-                    All Books
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Categories</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                  <Link className="w-full" href="/categories/fiction">
-                    Fiction
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link className="w-full" href="/categories/non-fiction">
-                    Non-Fiction
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link className="w-full" href="/categories/children">
-                    Children Books
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                isActive('/authors') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/authors"
-            >
-              Authors
-            </Link>
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                isActive('/events') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/events"
-            >
-              Events
-            </Link>
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                isActive('/about') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/about"
-            >
-              About
-            </Link>
-          </nav>
+          <NavMenu />
         </div>
 
         <Link className="-ml-3 flex items-center space-x-2 md:hidden" href="/">
@@ -180,104 +130,7 @@ export default function Header(): JSX.Element {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="container pb-3 md:hidden">
-          <div className="flex pb-3 items-center">
-            <input
-              className="flex-grow border rounded-l-md h-9 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="Search books..."
-              type="text"
-            />
-            <Button className="h-9 rounded-l-none" size="sm">
-              <Search className="h-4 w-4" />
-            </Button>
-          </div>
-          <nav className="flex flex-col space-y-3">
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                pathname.startsWith('/products') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/products"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              All Books
-            </Link>
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                pathname.startsWith('/categories/fiction') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/categories/fiction"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Fiction
-            </Link>
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                pathname.startsWith('/categories/non-fiction') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/categories/non-fiction"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Non-Fiction
-            </Link>
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                pathname.startsWith('/categories/children') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/categories/children"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Children Books
-            </Link>
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                isActive('/authors') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/authors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Authors
-            </Link>
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                isActive('/events') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/events"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Events
-            </Link>
-            <Link
-              className={`transition-colors hover:text-foreground/80 ${
-                isActive('/about') ? 'text-foreground font-semibold' : 'text-foreground/60'
-              }`}
-              href="/about"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
-            </Link>
-            {!isLoggedIn && (
-              <>
-                <Link
-                  className="transition-colors hover:text-foreground/80"
-                  href="/login"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  className="transition-colors hover:text-foreground/80"
-                  href="/sign-up"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-      )}
+      <MobileMenu isLoggedIn={isLoggedIn} isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 }
