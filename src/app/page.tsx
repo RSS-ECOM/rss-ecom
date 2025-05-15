@@ -11,7 +11,7 @@ export default function HomePage(): JSX.Element {
     <div className="flex flex-col items-center px-[10px]">
       <BannerSlider banners={banners} className="my-8" />
       {/* Featured Categories */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
+      <section className="w-full py-8 md:py-12 lg:py-16 bg-muted/40">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -62,7 +62,7 @@ export default function HomePage(): JSX.Element {
       </section>
 
       {/* New Arrivals Section */}
-      <section className="w-full py-12 md:py-24 bg-background">
+      <section className="w-full py-8 md:py-12 bg-background">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
@@ -93,95 +93,6 @@ export default function HomePage(): JSX.Element {
             <Button asChild variant="outline">
               <Link href="/products">View All Books</Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Navigation Links */}
-      <section className="w-full py-12 md:py-24 bg-muted/40 border-t">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter">Quick Navigation</h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground">Find your way around our virtual bookstore.</p>
-            </div>
-          </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3 mt-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Account</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/login">
-                    Login
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/sign-up">
-                    Register
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/account">
-                    My Account
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/account/orders">
-                    My Orders
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Bookstore</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/products">
-                    All Books
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/categories">
-                    Categories
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/authors">
-                    Authors
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/cart">
-                    Shopping Cart
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Information</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/about">
-                    About Us
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/events">
-                    Book Events
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/privacy-policy">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/contact">
-                    Contact Us
-                  </Link>
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
       </section>
