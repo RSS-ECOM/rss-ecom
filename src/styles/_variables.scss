@@ -44,51 +44,49 @@
   --medium-bold-font: 700 1.125rem 'Montserrat', sans-serif; // 18px
   --extra-bold-font: 700 2.1875rem 'Montserrat', sans-serif; // 35px
 
-  body.light {
-    // colors
-    // basic colors:
-    --white: #fff; // table background, buttons text, blog post footer, blog text background, user menu, form background
-    --button-white: #fff; // buttons text
+  // colors
+  // basic colors:
+  --white: #fff; // table background, buttons text, blog post footer, blog text background, user menu, form background
+  --button-white: #fff; // buttons text
 
-    // backgrounds:
-    --noble-white-100: #f5f5f5; // page background, edit forms background
-    --noble-white-200: #f0f0f0; // catalog filters background and product cards
-    --white-tr: #ffffffa9; // footer background, modal background, pagination background, card buttons background
-    --noble-gray-200: #eaeaea; // loader / input basic
-    --noble-gray-1000: #1a1a1ab5; // header background
-    --steel-blue-900: #375a7f1a; // blog background, personal info background
-    --steel-blue-1000: #375a7f37; // footer links background, pics round thingies
-    --noble-gray-1200: #091e420f; // about us cards
-    --noble-gray-1300: #ffffffd6; // about us cards modal
+  // backgrounds:
+  --noble-white-100: #f5f5f5; // page background, edit forms background
+  --noble-white-200: #f0f0f0; // catalog filters background and product cards
+  --white-tr: #ffffffa9; // footer background, modal background, pagination background, card buttons background
+  --noble-gray-200: #eaeaea; // loader / input basic
+  --noble-gray-1000: #1a1a1ab5; // header background
+  --steel-blue-900: #375a7f1a; // blog background, personal info background
+  --steel-blue-1000: #375a7f37; // footer links background, pics round thingies
+  --noble-gray-1200: #091e420f; // about us cards
+  --noble-gray-1300: #ffffffd6; // about us cards modal
 
-    // tranparent colors:
-    --noble-gray-tr-800: #acacacbd; // not active labels, tumblers
-    --noble-gray-tr-900: #c4c4c4a8; // not active labels, tumblers
-    --steel-blue-300: #375a7f80; // header outline, social media buttons outline
-    --noble-gray-tr-1000: #1a1a1a32; // header background
+  // tranparent colors:
+  --noble-gray-tr-800: #acacacbd; // not active labels, tumblers
+  --noble-gray-tr-900: #c4c4c4a8; // not active labels, tumblers
+  --steel-blue-300: #375a7f80; // header outline, social media buttons outline
+  --noble-gray-tr-1000: #1a1a1a32; // header background
 
-    // outline:
-    --noble-gray-300: #cbcbcb; // item cards and pagination outline
+  // outline:
+  --noble-gray-300: #cbcbcb; // item cards and pagination outline
 
-    // text colors:
-    --black: #000; // blog titles, footer titles
-    --red-power-600: #d0302f; // error messages, form errors
-    --noble-gray-400: #c4c4c4; // item cards description
-    --noble-gray-500: #acacac; // form titles
-    --noble-gray-600: #a5a5a5; // placeholders
-    --noble-gray-700: #727272; // blog/footer text
-    --noble-gray-800: #3d3d3d; // links, labels, base text, disabled svg, filters, descriptions
-    --noble-gray-900: #1d1d1d; // user profile text, buttons
-    --noble-gray-1100: #c4c4c4; // navigation links
+  // text colors:
+  --black: #000; // blog titles, footer titles
+  --red-power-600: #d0302f; // error messages, form errors
+  --noble-gray-400: #c4c4c4; // item cards description
+  --noble-gray-500: #acacac; // form titles
+  --noble-gray-600: #a5a5a5; // placeholders
+  --noble-gray-700: #727272; // blog/footer text
+  --noble-gray-800: #3d3d3d; // links, labels, base text, disabled svg, filters, descriptions
+  --noble-gray-900: #1d1d1d; // user profile text, buttons
+  --noble-gray-1100: #c4c4c4; // navigation links
 
-    // highlight colors:
-    --steel-blue-400: #375a7f; // price inputs, filter highlight, pagination active, product info titles
-    --steel-blue-500: #4a6f95; // new price, product name, filter titles
-    --forge-orange-700: #e67e22; // price slider, more, added to wishlist
-    --steel-blue-800: #375a7f; // main accent: buttons, logo, active links, burger, scroll, blog posts details, cart price, active svg
-    --forge-orange-1100: #f39c12; // theme tumbler round thingy
-    --forge-orange-1200: #d35400; // hover footer links
-  }
+  // highlight colors:
+  --steel-blue-400: #375a7f; // price inputs, filter highlight, pagination active, product info titles
+  --steel-blue-500: #4a6f95; // new price, product name, filter titles
+  --forge-orange-700: #e67e22; // price slider, more, added to wishlist
+  --steel-blue-800: #375a7f; // main accent: buttons, logo, active links, burger, scroll, blog posts details, cart price, active svg
+  --forge-orange-1100: #f39c12; // theme tumbler round thingy
+  --forge-orange-1200: #d35400; // hover footer links
 
   body.dark {
     // colors

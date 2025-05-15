@@ -1,3 +1,5 @@
+import BannerSlider from '@/components/layout/MainBanners/BannerSlider';
+import banners from '@/components/layout/MainBanners/bannersContent';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, BookMarked, BookOpen, BookText } from '@/components/ui/icons';
@@ -7,52 +9,7 @@ import Link from 'next/link';
 export default function HomePage(): JSX.Element {
   return (
     <div className="flex flex-col items-center">
-      {/* Hero Section */}
-      <section className="w-full h-screen flex items-center justify-center bg-background">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                Welcome to Story Hive
-              </h1>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                Buzzing with Great Reads for Every Reader!
-              </p>
-            </div>
-            <div className="space-x-4">
-              <Button asChild size="lg">
-                <Link href="/products">Browse Books</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/login">Join Our Community</Link>
-              </Button>
-            </div>
-
-            {/* Scroll Down Indicator */}
-            <div className="absolute bottom-8 animate-bounce">
-              <div className="flex flex-col items-center">
-                <p className="text-sm text-muted-foreground mb-2">Scroll Down</p>
-                <svg
-                  className="text-primary"
-                  fill="none"
-                  height="24"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 5v14" />
-                  <path d="m19 12-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      <BannerSlider banners={banners} className="my-8" />
       {/* Featured Categories */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
         <div className="container px-4 md:px-6">
