@@ -1,5 +1,6 @@
 'use client';
 
+import LogoDesktop from '@/components/ui/Logo/LogoDesktop';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useCustomer } from '@/hooks/use-customer';
 import useAuthStore from '@/store/auth-store';
-import { Book, Menu, MoonIcon, Search, ShoppingCart, SunIcon, User, X } from 'lucide-react';
+import { Menu, MoonIcon, Search, ShoppingCart, SunIcon, User, X } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useState } from 'react';
@@ -43,18 +44,12 @@ export default function Header(): JSX.Element {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
+        <div className="mr-6">
+          <LogoDesktop className="dark:filter dark:brightness-200 dark:contrast-50" />
+        </div>
         <div className="mr-4 hidden md:flex items-center">
-          <Link className="mr-6 flex items-center space-x-2" href="/">
-            <Book className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Story Hive</span>
-          </Link>
           <NavMenu />
         </div>
-
-        <Link className="-ml-3 flex items-center space-x-2 md:hidden" href="/">
-          <Book className="h-5 w-5 text-primary" />
-          <span className="font-bold">Story Hive</span>
-        </Link>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
           <div className="hidden md:flex">

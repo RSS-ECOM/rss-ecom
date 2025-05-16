@@ -8,10 +8,25 @@ import Image from 'next/image';
 import Link from 'next/link';
 import * as React from 'react';
 
-interface Banner {
+export interface Banner {
   colorScheme?: 'dark' | 'light';
   ctaLink: string;
   ctaText: string;
+  customStyles?: {
+    button?: string;
+    container?: string;
+    description?: string;
+    overlay?: string;
+    position?: 'center' | 'left' | 'right';
+    textAlign?: 'center' | 'left' | 'right';
+    title?: string;
+    titleUnderline?: {
+      color?: string;
+      height?: string;
+      show: boolean;
+      width?: string;
+    };
+  };
   description: string;
   id: string;
   imageUrl: string;
@@ -73,7 +88,9 @@ function BannerSlider({ autoplay = true, banners, className, interval = 5000 }: 
         <CarouselContent>
           {banners.map((banner, index) => (
             <CarouselItem key={banner.id}>
-              <div className="relative h-[50vh] md:h-[60vh] w-full overflow-hidden">
+              <div
+                className={cn('relative h-[50vh] md:h-[60vh] w-full overflow-hidden', banner.customStyles?.container)}
+              >
                 <Image
                   alt={banner.title}
                   className="object-cover"
@@ -87,20 +104,57 @@ function BannerSlider({ autoplay = true, banners, className, interval = 5000 }: 
                 />
                 <div
                   className={cn(
-                    'absolute inset-0 flex flex-col justify-center p-8 md:p-16',
+                    'absolute inset-0 flex flex-col',
                     banner.colorScheme === 'dark' ? 'bg-black/50 text-white' : 'bg-white/50 text-black',
+                    {
+                      'justify-center': !banner.customStyles?.position,
+                      'justify-center items-center': banner.customStyles?.position === 'center',
+                      'justify-center items-end': banner.customStyles?.position === 'right',
+                      'justify-center items-start': banner.customStyles?.position === 'left',
+                    },
+                    'p-8 md:p-16',
+                    banner.customStyles?.overlay,
                   )}
                 >
-                  <div className="max-w-xl space-y-4">
-                    <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{banner.title}</h2>
-                    <p className="text-lg md:text-xl">{banner.description}</p>
+                  <div
+                    className={cn('max-w-xl space-y-4', {
+                      'text-center': banner.customStyles?.textAlign === 'center',
+                      'text-left': banner.customStyles?.textAlign === 'left' || !banner.customStyles?.textAlign,
+                      'text-right': banner.customStyles?.textAlign === 'right',
+                    })}
+                  >
+                    <h2
+                      className={cn(
+                        'text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl relative pb-4',
+                        banner.customStyles?.title,
+                      )}
+                    >
+                      {banner.title}
+                      {banner.customStyles?.titleUnderline?.show && (
+                        <span
+                          className={cn('absolute block', {
+                            'left-0': !banner.customStyles?.textAlign || banner.customStyles?.textAlign === 'left',
+                            'left-1/2 -translate-x-1/2': banner.customStyles?.textAlign === 'center',
+                            'left-full -translate-x-full': banner.customStyles?.textAlign === 'right',
+                          })}
+                          style={{
+                            backgroundColor: banner.customStyles.titleUnderline.color || 'var(--primary)',
+                            bottom: 0,
+                            height: banner.customStyles.titleUnderline.height || '2px',
+                            width: banner.customStyles.titleUnderline.width || '80px',
+                          }}
+                        />
+                      )}
+                    </h2>
+                    <p className={cn('text-lg md:text-xl', banner.customStyles?.description)}>{banner.description}</p>
                     <Button
                       asChild
-                      className={
+                      className={cn(
                         banner.colorScheme === 'dark'
                           ? 'border-white text-white bg-black hover:bg-white hover:text-black'
-                          : 'text-black bg-white hover:bg-black hover:text-white'
-                      }
+                          : 'text-black bg-white hover:bg-black hover:text-white',
+                        banner.customStyles?.button,
+                      )}
                       size="lg"
                       variant={banner.colorScheme === 'dark' ? 'outline' : 'default'}
                     >

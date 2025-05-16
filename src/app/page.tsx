@@ -15,7 +15,9 @@ export default function HomePage(): JSX.Element {
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Featured Categories</h2>
+              <h2 className="text-3xl font-bold tracking-tighter dark:text-foreground sm:text-5xl">
+                Featured Categories
+              </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
                 Explore our carefully curated collection of books for all ages and interests.
               </p>
@@ -66,7 +68,7 @@ export default function HomePage(): JSX.Element {
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter">New Arrivals</h2>
+              <h2 className="text-3xl font-bold tracking-tighter dark:text-foreground ">New Arrivals</h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground">
                 The latest additions to our growing library of titles.
               </p>

@@ -32,7 +32,7 @@ export default function NotFound(): JSX.Element {
 
         <motion.h1
           animate={{ opacity: 1 }}
-          className="text-4xl font-bold mb-3"
+          className="text-4xl font-bold mb-3 dark:text-amber-200"
           initial={{ opacity: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
