@@ -1,10 +1,10 @@
 'use client';
 
+import { StyledInput } from '@/components/ui/StyledInput';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
@@ -142,7 +142,7 @@ export default function RegistrationForm(): JSX.Element {
   return (
     <Form {...form}>
       <form
-        className="border-2 p-4 rounded-xl w-[800px] flex flex-wrap gap-x-2.5 items-center justify-center space-y-6"
+        className="border border-border mb-6 p-6 md:p-8 rounded-xl w-full max-w-[800px] flex flex-wrap gap-x-4 gap-y-3 items-start justify-center bg-card/50 shadow-md dark:shadow-black/10"
         onSubmit={(e) => {
           form
             .handleSubmit(onSubmit)(e)
@@ -156,14 +156,17 @@ export default function RegistrationForm(): JSX.Element {
             });
         }}
       >
+        <div className="w-full">
+          <h3 className="text-lg font-merriweather text-foreground/90 mb-3 h-accent">Personal Information</h3>
+        </div>
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem className="grow basis-full">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="your.email@gmail.com" type="email" {...field} value={field.value || ''} />
+                <StyledInput placeholder="your.email@gmail.com" type="email" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -174,10 +177,10 @@ export default function RegistrationForm(): JSX.Element {
           control={form.control}
           name="firstName"
           render={({ field }) => (
-            <FormItem className="grow basis-2/5">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>First name</FormLabel>
               <FormControl>
-                <Input placeholder="First name" {...field} />
+                <StyledInput placeholder="First name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -188,10 +191,10 @@ export default function RegistrationForm(): JSX.Element {
           control={form.control}
           name="lastName"
           render={({ field }) => (
-            <FormItem className="grow basis-2/5">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Last name</FormLabel>
               <FormControl>
-                <Input placeholder="Last name" {...field} />
+                <StyledInput placeholder="Last name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -202,13 +205,16 @@ export default function RegistrationForm(): JSX.Element {
           control={form.control}
           name="dateOfBirth"
           render={({ field }) => (
-            <FormItem className="flex flex-col grow basis-2/5">
-              <FormLabel>Date of birth</FormLabel>
+            <FormItem className="flex flex-col grow basis-full sm:basis-2/5">
+              <FormLabel className="mb-2.5">Date of birth</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
-                      className={cn('w-[240px] pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                      className={cn(
+                        'w-full sm:w-[240px] pl-3 text-left font-normal border-input bg-background/50 hover:bg-accent/10',
+                        !field.value && 'text-muted-foreground',
+                      )}
                       variant={'outline'}
                     >
                       {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
@@ -267,6 +273,7 @@ export default function RegistrationForm(): JSX.Element {
                     </select>
                   </div>
                   <Calendar
+                    className="bg-background border rounded-md"
                     disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                     initialFocus
                     mode="single"
@@ -280,11 +287,15 @@ export default function RegistrationForm(): JSX.Element {
           )}
         />
 
+        <div className="w-full mt-4">
+          <h3 className="text-lg font-merriweather text-foreground/90 mb-3 h-accent">Billing Address</h3>
+        </div>
+
         <FormField
           control={form.control}
           name="billCountry"
           render={({ field }) => (
-            <FormItem className="grow basis-2/5">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Billing Country</FormLabel>
               <Select defaultValue={field.value} onValueChange={field.onChange}>
                 <FormControl>
@@ -309,10 +320,10 @@ export default function RegistrationForm(): JSX.Element {
           control={form.control}
           name="billCity"
           render={({ field }) => (
-            <FormItem className="grow basis-2/5">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Billing city</FormLabel>
               <FormControl>
-                <Input placeholder="city" {...field} />
+                <StyledInput placeholder="city" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -323,10 +334,10 @@ export default function RegistrationForm(): JSX.Element {
           control={form.control}
           name="billPostalCode"
           render={({ field }) => (
-            <FormItem className="grow basis-2/5">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Billing postal code</FormLabel>
               <FormControl>
-                <Input placeholder="postal code" {...field} />
+                <StyledInput placeholder="postal code" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -337,10 +348,10 @@ export default function RegistrationForm(): JSX.Element {
           control={form.control}
           name="billStreet"
           render={({ field }) => (
-            <FormItem className="grow basis-2/5">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Billing street</FormLabel>
               <FormControl>
-                <Input placeholder="street" {...field} />
+                <StyledInput placeholder="street" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -402,7 +413,7 @@ export default function RegistrationForm(): JSX.Element {
           )}
         />
 
-        <Separator />
+        <Separator className="w-full my-6 bg-primary/20" />
 
         {!form.watch('sameBillShip') && (
           <>
@@ -410,7 +421,7 @@ export default function RegistrationForm(): JSX.Element {
               control={form.control}
               name="shipCountry"
               render={({ field }) => (
-                <FormItem className="grow basis-2/5">
+                <FormItem className="grow basis-full sm:basis-2/5">
                   <FormLabel>Shipping Country</FormLabel>
                   <Select defaultValue={field.value} onValueChange={field.onChange}>
                     <FormControl>
@@ -434,10 +445,10 @@ export default function RegistrationForm(): JSX.Element {
               control={form.control}
               name="shipCity"
               render={({ field }) => (
-                <FormItem className="grow basis-2/5">
+                <FormItem className="grow basis-full sm:basis-2/5">
                   <FormLabel>Shipping city</FormLabel>
                   <FormControl>
-                    <Input placeholder="city" {...field} />
+                    <StyledInput placeholder="city" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -448,10 +459,10 @@ export default function RegistrationForm(): JSX.Element {
               control={form.control}
               name="shipPostalCode"
               render={({ field }) => (
-                <FormItem className="grow basis-2/5">
+                <FormItem className="grow basis-full sm:basis-2/5">
                   <FormLabel>Shipping postal code</FormLabel>
                   <FormControl>
-                    <Input placeholder="postal code" {...field} />
+                    <StyledInput placeholder="postal code" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -462,10 +473,10 @@ export default function RegistrationForm(): JSX.Element {
               control={form.control}
               name="shipStreet"
               render={({ field }) => (
-                <FormItem className="grow basis-2/5">
+                <FormItem className="grow basis-full sm:basis-2/5">
                   <FormLabel>Shipping postal code</FormLabel>
                   <FormControl>
-                    <Input placeholder="street" {...field} />
+                    <StyledInput placeholder="street" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -488,14 +499,18 @@ export default function RegistrationForm(): JSX.Element {
           </>
         )}
 
+        <div className="w-full mt-4">
+          <h3 className="text-lg font-merriweather text-foreground/90 mb-3 h-accent">Security</h3>
+        </div>
+
         <FormField
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem className="grow basis-2/5">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input placeholder="password" type="password" {...field} />
+                <StyledInput placeholder="password" type="password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -506,20 +521,31 @@ export default function RegistrationForm(): JSX.Element {
           control={form.control}
           name="confirmPassword"
           render={({ field }) => (
-            <FormItem className="grow basis-2/5">
+            <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Confirm Password</FormLabel>
               <FormControl>
-                <Input placeholder="confirm password" type="password" {...field} />
+                <StyledInput placeholder="confirm password" type="password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Separator />
+        <Separator className="w-full my-6 bg-primary/20" />
 
-        <Button className="w-full" disabled={isRegisterLoading} type="submit">
-          {isRegisterLoading ? 'Registering...' : 'Register'}
+        <Button
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 text-lg transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60"
+          disabled={isRegisterLoading}
+          type="submit"
+        >
+          {isRegisterLoading ? (
+            <span className="flex items-center justify-center">
+              <span className="bee-loader mr-2 w-5 h-5 inline-block"></span>
+              Creating account...
+            </span>
+          ) : (
+            'Create Account'
+          )}
         </Button>
       </form>
     </Form>

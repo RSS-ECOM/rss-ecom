@@ -1,9 +1,19 @@
-import React from 'react';
+import type { Metadata } from 'next';
 
-export default function ProfilePage(): React.JSX.Element {
+import UnderDevelopment from '@/components/layout/UnderDevelopment/UnderDevelopment';
+
+export const metadata: Metadata = {
+  description: 'View and manage your account',
+  title: 'My Account',
+};
+
+export default function AccountPage(): JSX.Element {
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Page Name</h1>
-    </div>
+    <UnderDevelopment
+      message="We're currently working on implementing this feature. Please check back soon!"
+      returnLabel="Return to Homepage"
+      returnPath="/"
+      title="Feature Coming Soon"
+    />
   );
 }

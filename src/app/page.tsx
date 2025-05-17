@@ -1,3 +1,5 @@
+import BannerSlider from '@/components/layout/MainBanners/BannerSlider';
+import banners from '@/components/layout/MainBanners/bannersContent';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, BookMarked, BookOpen, BookText } from '@/components/ui/icons';
@@ -6,59 +8,16 @@ import Link from 'next/link';
 // eslint-disable-next-line max-lines-per-function
 export default function HomePage(): JSX.Element {
   return (
-    <div className="flex flex-col items-center">
-      {/* Hero Section */}
-      <section className="w-full h-screen flex items-center justify-center bg-background">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                Welcome to Story Hive
-              </h1>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                Buzzing with Great Reads for Every Reader!
-              </p>
-            </div>
-            <div className="space-x-4">
-              <Button asChild size="lg">
-                <Link href="/products">Browse Books</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/login">Join Our Community</Link>
-              </Button>
-            </div>
-
-            {/* Scroll Down Indicator */}
-            <div className="absolute bottom-8 animate-bounce">
-              <div className="flex flex-col items-center">
-                <p className="text-sm text-muted-foreground mb-2">Scroll Down</p>
-                <svg
-                  className="text-primary"
-                  fill="none"
-                  height="24"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 5v14" />
-                  <path d="m19 12-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+    <div className="flex flex-col items-center px-[10px]">
+      <BannerSlider banners={banners} className="my-8" />
       {/* Featured Categories */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
+      <section className="w-full py-8 md:py-12 lg:py-16 bg-muted/40">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Featured Categories</h2>
+              <h2 className="text-3xl font-bold tracking-tighter dark:text-foreground sm:text-5xl">
+                Featured Categories
+              </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
                 Explore our carefully curated collection of books for all ages and interests.
               </p>
@@ -105,11 +64,11 @@ export default function HomePage(): JSX.Element {
       </section>
 
       {/* New Arrivals Section */}
-      <section className="w-full py-12 md:py-24 bg-background">
+      <section className="w-full py-8 md:py-12 bg-background">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter">New Arrivals</h2>
+              <h2 className="text-3xl font-bold tracking-tighter dark:text-foreground ">New Arrivals</h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground">
                 The latest additions to our growing library of titles.
               </p>
@@ -136,95 +95,6 @@ export default function HomePage(): JSX.Element {
             <Button asChild variant="outline">
               <Link href="/products">View All Books</Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Navigation Links */}
-      <section className="w-full py-12 md:py-24 bg-muted/40 border-t">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter">Quick Navigation</h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground">Find your way around our virtual bookstore.</p>
-            </div>
-          </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3 mt-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Account</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/login">
-                    Login
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/sign-up">
-                    Register
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/account">
-                    My Account
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/account/orders">
-                    My Orders
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Bookstore</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/products">
-                    All Books
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/categories">
-                    Categories
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/authors">
-                    Authors
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/cart">
-                    Shopping Cart
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Information</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/about">
-                    About Us
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/events">
-                    Book Events
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/privacy-policy">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-primary underline-offset-4 hover:underline" href="/contact">
-                    Contact Us
-                  </Link>
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
       </section>

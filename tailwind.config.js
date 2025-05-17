@@ -65,6 +65,10 @@ module.exports = {
           foreground: 'hsl(var(--secondary-foreground))',
         },
       },
+      fontFamily: {
+        lato: ['Lato', 'sans-serif'],
+        merriweather: ['Merriweather', 'serif'],
+      },
       keyframes: {
         'accordion-down': {
           from: {

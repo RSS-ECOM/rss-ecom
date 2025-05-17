@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import LayoutContent from '@/components/layout/LayoutContent/LayoutContent';
+import TransitionEffect from '@/components/ui/TransitionEffect';
 import { Toaster } from '@/components/ui/toaster';
 import { CustomerProvider } from '@/lib/customer-client';
 import QueryProvider from '@/providers/query-provider';
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
         <QueryProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <CustomerProvider>
-              <LayoutContent>{children}</LayoutContent>
+              <TransitionEffect>
+                <LayoutContent>{children}</LayoutContent>
+              </TransitionEffect>
               <Toaster />
             </CustomerProvider>
           </ThemeProvider>
