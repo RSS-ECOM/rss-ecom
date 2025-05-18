@@ -1,4 +1,6 @@
 import server from '@/test/mocks/node';
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 if (typeof window !== 'undefined') {
   window.scrollTo = (): void => {};
