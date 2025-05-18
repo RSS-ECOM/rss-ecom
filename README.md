@@ -1,32 +1,32 @@
-# HeavyMetal 🔨
+# Story Hive 📚
 
-## General Overview 🛍️
+## General Overview 📚
 
-Welcome to HeavyMetal, your digital armory for all things metallic! ⚔️
+Welcome to Story Hive, your digital destination for literary adventures! 📖
 
 - [Our Mission](#our-mission-) 🔥
-- [Key Features](#key-features-of-heavymetal-include-%EF%B8%8F) 🗝️
+- [Key Features](#key-features-of-story-hive-include-) 🗝️
 - [Technical Stack](#technical-stack-) 💻
-- [How to Run the Project Locally](#how-to-run-the-project-locally-%EF%B8%8F) ⚙️
+- [How to Run the Project Locally](#how-to-run-the-project-locally-) ⚙️
 - [Git Workflow](#git-workflow-) 🔄
 - [Available Scripts](#available-scripts-) 📑
 - [Contact us](#contact-us-) 📩
 
 ### Our Mission 🔥
 
-At HeavyMetal, we're on a mission to deliver premium quality metal products, tools, and equipment. Our curated collection features a diverse array of weapons, armor, tools, and accessories, meticulously selected to cater to both casual buyers and dedicated collectors alike. Whether you're looking to protect yourself or deal some damage, HeavyMetal has everything you need to outfit yourself with the finest metalwork.
+At Story Hive, we believe that books have the power to educate, inspire, and transform lives. Our mission is to make quality literature accessible to everyone and foster a lifelong love of reading. Our curated collection features books spanning all genres, meticulously selected to cater to readers of all ages and interests.
 
-Our modern and industrial website offers a sleek and intuitive shopping experience, designed to showcase the craftsmanship of our products. From our clean UI to our seamless navigation, we're committed to making your shopping experience as effortless and enjoyable as possible.
+Our modern and intuitive website offers a sleek shopping experience, designed to showcase the rich diversity of our literary offerings. From our clean UI to our seamless navigation, we're committed to making your book discovery journey as effortless and enjoyable as possible.
 
-### Key Features of HeavyMetal Include 🗝️
+### Key Features of Story Hive Include 🗝️
 
-⚔️ **Premium Quality Selection**: Explore our extensive catalog of metal products, weapons, tools, and equipment, handpicked to ensure the highest quality and craftsmanship.
+📚 **Extensive Collection**: Explore our catalog of numerous titles spanning all major genres, handpicked to ensure the highest quality literature.
 
-🛡️ **Product Categories**: Browse through categories including weapons, armor, tools, decorative items, and accessories.
+📑 **Product Categories**: Browse through categories including fiction, non-fiction, children's books, academic titles, and special collections.
 
 🔎 **Advanced Search & Filtering**: Find exactly what you're looking for with our robust search and filtering system.
 
-🧭 **User-friendly Navigation**: Our intuitive navigation system makes it easy to find the products you need.
+🧭 **User-friendly Navigation**: Our intuitive navigation system makes it easy to discover your next great read.
 
 🔒 **Secure Checkout**: Shop with confidence with our secure payment processing.
 
@@ -41,19 +41,19 @@ _In our project we use the following technologies:_
   - [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/) for building dynamic user interfaces
   - [Next.js](https://nextjs.org/) for server-side rendering and optimized performance
   - [Shadcn/ui](https://ui.shadcn.com/) for beautifully designed UI components
-  - [Framer Motion](https://www.framer.com/motion/) for smooth animations and transitions
+  - [Framer Motion](https://www.framer.com/motion/) for smooth animations and page transitions
   - [SASS](https://sass-lang.com/) for advanced styling capabilities 🎨
   - [Tailwind CSS](https://tailwindcss.com/) for utility-first styling
 
-- **Backend**: Supported by [CommerceTools](https://commercetools.com/), a leading provider of commerce solutions, offering a robust and scalable platform for creating immersive digital commerce experiences 🌐
+- **Backend**: Powered by [CommerceTools](https://commercetools.com/), a leading provider of commerce solutions, offering a robust and scalable platform for creating immersive e-commerce experiences 🌐
 
-- **CI/CD**: Integrates [GitHub Actions](https://github.com/features/actions) for continuous integration and deployment 🚀
+- **CI/CD**: Integrates [GitHub Actions](https://github.com/features/actions) for continuous integration and [Netlify](https://www.netlify.com/) for continuous deployment 🚀
 
 - **Code Quality**: Ensures code quality through rigorous checks with [Husky](https://typicode.github.io/husky/), [Prettier](https://prettier.io/), [ESLint](https://eslint.org/), [Perfectionist](https://eslint-plugin-perfectionist.azat.io/), [Stylelint](https://stylelint.io/), and [EditorConfig](https://editorconfig.org/) 🐶
 
 - **Testing**: Conducts thorough testing with [Vitest](https://vitest.dev/) and [Mock Service Worker](https://mswjs.io/) ⚡
 
-- **Project Architecture**: Follows Next.js App Router architecture for efficient, scalable development with React Server Components 🌍
+- **Project Architecture**: Follows Next.js App Router architecture for efficient, scalable development with React Server Components and TypeScript 🌍
 
 ## How to Run the Project Locally ⚙️
 
@@ -62,8 +62,9 @@ _To run the project locally, follow these steps:_
 1. Clone the repository: `git clone https://github.com/RSS-ECOM/rss-ecom`
 2. Navigate to the project directory: `cd rss-ecom`
 3. Install dependencies: `npm install`
-4. Create a `.env` file based on `.env.example` and fill in your CommerceTools credentials
+4. Create a `.env.local` file based on `.env.example` and fill in your CommerceTools credentials
 5. Run the project: `npm run dev`
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Git Workflow 🔄
 

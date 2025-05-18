@@ -1,8 +1,8 @@
 {
-  "name": "heavymetal",
+  "name": "storyhive",
   "private": true,
-  "version": "0.0.1",
-  "description": "Looking to protect yourself or deal some damage?",
+  "version": "0.0.2",
+  "description": "Your digital destination for literary adventures!",
   "type": "module",
   "scripts": {
     "dev": "next dev",
