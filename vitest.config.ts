@@ -11,9 +11,15 @@ export default defineConfig({
     },
   },
   test: {
+    coverage: {
+      exclude: ['node_modules/', 'src/types/', '**/*.d.ts', '**/*.config.*', '**/constants/**'],
+      provider: 'v8',
+      reporter: ['text', 'html'],
+    },
     css: true,
     environment: 'jsdom',
     globals: true,
+    include: ['**/*.{test,spec}.{ts,tsx}'],
     setupFiles: ['./vitest.setup.ts'],
   },
 });

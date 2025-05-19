@@ -1,9 +1,12 @@
-import React from 'react';
+import UnderDevelopment from '@/components/layout/UnderDevelopment/UnderDevelopment';
 
-export default function SamplePage(): React.JSX.Element {
+export default function DefaultPage(): JSX.Element {
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Page Name</h1>
-    </div>
+    <UnderDevelopment
+      message="We're currently working on implementing this feature. Please check back soon!"
+      returnLabel="Return to Homepage"
+      returnPath="/"
+      title="Feature Coming Soon"
+    />
   );
 }

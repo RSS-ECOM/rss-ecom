@@ -34,6 +34,13 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        chart: {
+          1: 'hsl(var(--chart-1))',
+          2: 'hsl(var(--chart-2))',
+          3: 'hsl(var(--chart-3))',
+          4: 'hsl(var(--chart-4))',
+          5: 'hsl(var(--chart-5))',
+        },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
@@ -58,14 +65,26 @@ module.exports = {
           foreground: 'hsl(var(--secondary-foreground))',
         },
       },
+      fontFamily: {
+        lato: ['Lato', 'sans-serif'],
+        merriweather: ['Merriweather', 'serif'],
+      },
       keyframes: {
         'accordion-down': {
-          from: { height: 0 },
-          to: { height: 'var(--radix-accordion-content-height)' },
+          from: {
+            height: 0,
+          },
+          to: {
+            height: 'var(--radix-accordion-content-height)',
+          },
         },
         'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: 0 },
+          from: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+          to: {
+            height: 0,
+          },
         },
       },
     },

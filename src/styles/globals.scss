@@ -3,3 +3,185 @@
 @use 'fonts';
 @use 'common';
 @use 'mixins';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 100% 97%;
+    --foreground: 16 20% 33%;
+    --card: 48 100% 95%;
+    --card-foreground: 15 20% 29%;
+    --popover: 60 100% 97%;
+    --popover-foreground: 16 20% 33%;
+
+    --primary: 45 100% 51%;
+    --primary-foreground: 15 20% 29%;
+    --secondary: 39 100% 50%;
+    --secondary-foreground: 15 20% 29%;
+
+    --muted: 39 38% 74%;
+    --muted-foreground: 15 24% 40%;
+    --accent: 36 100% 50%;
+    --accent-foreground: 15 20% 29%;
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 39 38% 84%;
+    --input: 39 38% 84%;
+    --ring: 45 100% 51%;
+
+    --chart-1: 45 100% 51%;
+    --chart-2: 147 40% 37%;
+    --chart-3: 210 100% 50%;
+    --chart-4: 36 100% 50%;
+    --chart-5: 0 59% 25%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 47 10% 15%;
+    --foreground: 39 20% 80%;
+    --card: 46 13% 25%;
+    --card-foreground: 39 20% 87%;
+    --popover: 47 10% 15%;
+    --popover-foreground: 39 20% 80%;
+
+    --primary: 46 59% 50%;
+    --primary-foreground: 15 20% 87%;
+    --secondary: 36 100% 45%;
+    --secondary-foreground: 15 20% 87%;
+
+    --muted: 46 13% 40%;
+    --muted-foreground: 39 15% 75%;
+    --accent: 36 100% 45%;
+    --accent-foreground: 15 20% 87%;
+    --destructive: 0 84% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 46 13% 40%;
+    --input: 46 13% 40%;
+    --ring: 46 59% 50%;
+
+    --chart-1: 46 59% 50%;
+    --chart-2: 122 39% 49%;
+    --chart-3: 210 100% 55%;
+    --chart-4: 36 100% 45%;
+    --chart-5: 340 83% 38%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-lato;
+    font-family: 'Lato', sans-serif;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-merriweather;
+  }
+  p,
+  a,
+  button,
+  div,
+  ul,
+  li,
+  ol {
+    @apply font-lato;
+  }
+}
+
+// Custom component classes
+@layer components {
+  .hover-glow {
+    @apply transition-all duration-300;
+
+    &:hover {
+      box-shadow: 0 0 15px hsl(var(--primary));
+      transform: translateY(-2px);
+    }
+  }
+
+  .book-card {
+    @apply transition-all duration-300 rounded-md bg-card;
+
+    &:hover {
+      @apply transform -translate-y-1 shadow-lg;
+    }
+  }
+
+  .underline-animation {
+    @apply relative;
+
+    &::after {
+      @apply content-[''] absolute left-0 -bottom-1 h-[2px] bg-primary w-0 transition-[width] duration-300 ease-in-out;
+    }
+
+    &:hover::after {
+      @apply w-full;
+    }
+  }
+
+  .section-heading {
+    @apply font-merriweather relative pb-2;
+
+    &::after {
+      @apply content-[''] absolute left-0 bottom-0 h-[3px] w-[60px] bg-primary;
+    }
+
+    &.centered::after {
+      @apply left-1/2 -translate-x-1/2;
+    }
+  }
+  .registration-wrapper {
+    @apply container mx-auto px-4 py-8 md:py-12 min-h-[calc(100vh-4rem)];
+  }
+
+  .form-section {
+    @apply relative p-0.5 overflow-hidden rounded-xl;
+
+    &::before {
+      @apply content-[''] absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 -z-10;
+    }
+  }
+
+  .form-input-focus {
+    @apply focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary;
+  }
+}
+
+// Bee loader animation
+.bee-loader {
+  position: relative;
+  width: 60px;
+  height: 60px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url('/img/svg/logo.svg');
+    background-size: contain;
+    animation: buzz 0.8s infinite alternate;
+  }
+}
+
+@keyframes buzz {
+  0% {
+    transform: translateX(-3px) rotate(-5deg);
+  }
+  100% {
+    transform: translateX(3px) rotate(5deg);
+  }
+}

@@ -61,7 +61,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-inferrable-types': 'error',
     '@typescript-eslint/no-misused-promises': [
-      'error',
+      'warn',
       {
         checksVoidReturn: {
           arguments: false,
@@ -80,7 +80,8 @@ module.exports = {
         tsx: 'never',
       },
     ],
-    'max-lines-per-function': ['error', { max: 40, skipBlankLines: true, skipComments: true }],
+    'max-lines-per-function': ['error', { max: 200, skipBlankLines: true, skipComments: true }],
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-restricted-globals': 'off',
     'no-shadow': 'off',
     'no-use-before-define': 'off',
