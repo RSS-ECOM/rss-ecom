@@ -2,12 +2,13 @@ import { useCustomerClient } from '@/lib/customer-client';
 import myTokenCache from '@/app/api/token-cache';
 import setLogin from '@/app/actions/set-login';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
+import { useResponsiveToast } from '@/hooks/use-responsive-toast';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/auth-store';
 
 export function useCustomer() {
   const { customerClient } = useCustomerClient();
+  const { toast } = useResponsiveToast();
   const { login, logout } = useAuthStore();
   const queryClient = useQueryClient();
   const router = useRouter();

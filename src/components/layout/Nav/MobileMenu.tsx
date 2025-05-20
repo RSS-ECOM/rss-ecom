@@ -1,11 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { useCustomer } from '@/hooks/use-customer';
 import { cn } from '@/lib/utils';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 interface MobileMenuProps {
   isLoggedIn: boolean;
@@ -16,6 +17,12 @@ interface MobileMenuProps {
 export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuProps): JSX.Element {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
+  const { logout } = useCustomer();
+
+  const handleLogoutClick = useCallback(() => {
+    logout();
+    onClose();
+  }, [logout, onClose]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent): void {
@@ -47,6 +54,28 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
       document.body.style.overflow = '';
     };
   }, [isOpen]);
+
+  function MobileLogoutButton(): JSX.Element {
+    return (
+      <button
+        className={cn(
+          'relative transition-colors hover:text-foreground/80 w-full block py-2 text-left',
+          'text-foreground/60',
+          'group',
+        )}
+        onClick={handleLogoutClick}
+      >
+        Logout
+        <span
+          className={cn(
+            'h-[1px] inline-block bg-primary absolute left-0 -bottom-0.5',
+            'group-hover:w-full transition-[width] duration-300 ease-in-out',
+            'w-0',
+          )}
+        />
+      </button>
+    );
+  }
 
   function MobileNavLink({ children, href }: { children: React.ReactNode; href: string }): JSX.Element {
     const isActive = pathname === href || pathname.startsWith(`${href}/`);
@@ -101,7 +130,13 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
           <MobileNavLink href="/events">Events</MobileNavLink>
           <MobileNavLink href="/about">About</MobileNavLink>
 
-          {!isLoggedIn && (
+          {isLoggedIn ? (
+            <>
+              <MobileNavLink href="/account">My Account</MobileNavLink>
+              <MobileNavLink href="/account/orders">My Orders</MobileNavLink>
+              <MobileLogoutButton />
+            </>
+          ) : (
             <>
               <MobileNavLink href="/login">Login</MobileNavLink>
               <MobileNavLink href="/sign-up">Sign Up</MobileNavLink>
