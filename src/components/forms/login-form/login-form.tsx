@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { useCustomer } from '@/hooks/use-customer';
-import { toast } from '@/hooks/use-toast';
+import { useResponsiveToast } from '@/hooks/use-responsive-toast';
 import useAuthStore from '@/store/auth-store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
@@ -14,22 +14,32 @@ import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { PasswordInput } from '../registration-form/registration-form';
+
 export default function LoginForm(): JSX.Element | null {
+  const { toast } = useResponsiveToast();
   const router = useRouter();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const { isLoginLoading, login } = useCustomer();
   const [isLoading, setIsLoading] = useState(true);
 
   const FormSchema = z.object({
-    email: z.string().email('Write a valid email address'),
+    email: z.string().trim().email('Write a valid email address'),
     password: z
       .string()
-      .min(5, 'Password must be at least 5 characters')
+      .trim()
+      .min(8, 'Password must be at least 8 characters')
       .refine((val) => /[a-z]/.test(val), {
         message: 'Password must contain at least one lowercase letter',
       })
       .refine((val) => /[A-Z]/.test(val), {
         message: 'Password must contain at least one uppercase letter',
+      })
+      .refine((val) => /\d/.test(val), {
+        message: 'Password must contain at least one number',
+      })
+      .refine((val) => !/\s/.test(val), {
+        message: 'Password cannot contain spaces',
       }),
   });
 
@@ -113,9 +123,12 @@ export default function LoginForm(): JSX.Element | null {
             <FormItem className="grow basis-full">
               <FormLabel className="font-medium text-foreground/90">Password</FormLabel>
               <FormControl>
-                <StyledInput placeholder="password" type="password" {...field} />
+                <PasswordInput field={field} placeholder="password" />
               </FormControl>
               <FormMessage />
+              <p className="text-xs text-muted-foreground mt-1">
+                Password must be at least 8 characters and include uppercase, lowercase, and number.
+              </p>
             </FormItem>
           )}
         />

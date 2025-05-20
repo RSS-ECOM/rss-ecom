@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useCustomer } from '@/hooks/use-customer';
-import { toast } from '@/hooks/use-toast';
+import { useResponsiveToast } from '@/hooks/use-responsive-toast';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -20,7 +20,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-type PasswordInputProps<TFieldValues extends Record<string, unknown> = Record<string, unknown>> = {
+export type PasswordInputProps<TFieldValues extends Record<string, unknown> = Record<string, unknown>> = {
   field: ControllerRenderProps<TFieldValues, FieldPath<TFieldValues>>;
   placeholder?: string;
 };
@@ -44,7 +44,7 @@ function validatePostalCode(postalCode: string, country: string): boolean {
   return pattern.test(postalCode);
 }
 
-const PasswordInput = <TFieldValues extends Record<string, unknown> = Record<string, unknown>>({
+export const PasswordInput = <TFieldValues extends Record<string, unknown> = Record<string, unknown>>({
   field,
   placeholder = 'password',
 }: PasswordInputProps<TFieldValues>): JSX.Element => {
@@ -206,6 +206,7 @@ const FormSchema = FormSchemaBase.superRefine((data, ctx) => {
 
 // eslint-disable-next-line max-lines-per-function
 export default function RegistrationForm(): JSX.Element {
+  const { toast } = useResponsiveToast();
   const { isRegisterLoading, register } = useCustomer();
   const form = useForm<z.infer<typeof FormSchema>>({
     defaultValues: {
