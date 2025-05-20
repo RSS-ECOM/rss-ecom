@@ -307,7 +307,7 @@ export default function RegistrationForm(): JSX.Element {
                   type="text"
                   {...field}
                   className={/\s/.test(field.value || '') ? 'border-red-500 focus:border-red-500 bg-red-50/30' : ''}
-                  // MANUAL WAY, DO NOT USE, ONLY FOR COMPLETE CROSS-CHECK
+                  // MANUAL WAY, DO NOT USE, ONLY FOR COMPLETE CROSS-CHECK!
                   onChange={(e) => {
                     const originalValue = e.target.value;
                     field.onChange(originalValue);
