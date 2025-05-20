@@ -91,7 +91,12 @@ const FormSchemaBase = z.object({
     invalid_type_error: 'Choose a valid date',
     required_error: 'Choose your birthday',
   }),
-  email: z.string().trim().email('Write a valid email address'),
+  email: z
+    .string()
+    .email('Write a valid email address')
+    .refine((val) => !/\s/.test(val), {
+      message: 'Email address must not contain whitespace',
+    }),
   firstName: z
     .string()
     .trim()
@@ -232,6 +237,14 @@ export default function RegistrationForm(): JSX.Element {
   });
 
   function onSubmit(data: FormData): void {
+    if (/\s/.test(data.email)) {
+      toast({
+        description: 'Email address contains whitespace. Please remove all spaces.',
+        title: 'Validation Error',
+        variant: 'destructive',
+      });
+      return;
+    }
     const customerParams = {
       addresses: [
         {
@@ -289,8 +302,28 @@ export default function RegistrationForm(): JSX.Element {
             <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <StyledInput placeholder="your.email@gmail.com" type="email" {...field} value={field.value || ''} />
+                <StyledInput
+                  placeholder="your.email@gmail.com"
+                  type="text"
+                  {...field}
+                  className={/\s/.test(field.value || '') ? 'border-red-500 focus:border-red-500 bg-red-50/30' : ''}
+                  // MANUAL WAY, DO NOT USE, ONLY FOR COMPLETE CROSS-CHECK
+                  onChange={(e) => {
+                    const originalValue = e.target.value;
+                    field.onChange(originalValue);
+
+                    if (/\s/.test(originalValue)) {
+                      e.target.classList.add('border-red-500');
+                    } else {
+                      e.target.classList.remove('border-red-500');
+                    }
+                  }}
+                  value={field.value || ''}
+                />
               </FormControl>
+              {/\s/.test(field.value || '') && (
+                <p className="text-xs font-medium text-red-500 mt-1">Email contains spaces! Please remove them.</p>
+              )}
               <FormMessage />
             </FormItem>
           )}

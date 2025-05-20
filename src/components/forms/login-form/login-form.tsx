@@ -24,7 +24,12 @@ export default function LoginForm(): JSX.Element | null {
   const [isLoading, setIsLoading] = useState(true);
 
   const FormSchema = z.object({
-    email: z.string().trim().email('Write a valid email address'),
+    email: z
+      .string()
+      .email('Write a valid email address')
+      .refine((val) => !/\s/.test(val), {
+        message: 'Email address must not contain whitespace',
+      }),
     password: z
       .string()
       .trim()
@@ -52,6 +57,14 @@ export default function LoginForm(): JSX.Element | null {
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>): void {
+    if (/\s/.test(data.email)) {
+      toast({
+        description: 'Email address contains whitespace. Please remove all spaces.',
+        title: 'Validation Error',
+        variant: 'destructive',
+      });
+      return;
+    }
     login({
       email: data.email,
       password: data.password,
@@ -109,8 +122,16 @@ export default function LoginForm(): JSX.Element | null {
             <FormItem className="grow basis-full">
               <FormLabel className="font-medium text-foreground/90">Email</FormLabel>
               <FormControl>
-                <StyledInput placeholder="your.email@gmail.com" type="email" {...field} />
+                <StyledInput
+                  placeholder="your.email@gmail.com"
+                  type="text"
+                  {...field}
+                  className={/\s/.test(field.value || '') ? 'border-red-500 focus:border-red-500 bg-red-50/30' : ''}
+                />
               </FormControl>
+              {/\s/.test(field.value || '') && (
+                <p className="text-xs font-medium text-red-500 mt-1">Email contains spaces! Please remove them.</p>
+              )}
               <FormMessage />
             </FormItem>
           )}
