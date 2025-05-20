@@ -245,6 +245,7 @@ export default function RegistrationForm(): JSX.Element {
       });
       return;
     }
+        
     const customerParams = {
       addresses: [
         {
