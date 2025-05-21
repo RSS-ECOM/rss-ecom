@@ -89,7 +89,7 @@ export default function LoginForm(): JSX.Element | null {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if (isLoggedIn) {
-        router.replace('/products');
+        router.replace('/');
       }
       setIsLoading(false);
     } else {
