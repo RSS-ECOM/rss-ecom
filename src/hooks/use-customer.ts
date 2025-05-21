@@ -44,7 +44,7 @@ export function useCustomer() {
         description: 'Successfully logged in',
         title: 'Welcome back!',
       });
-      router.push('/products');
+      router.push('/');
     },
     onError: (error) => {
       toast({
@@ -76,7 +76,7 @@ export function useCustomer() {
         description: 'Your account has been created successfully',
         title: 'Success!',
       });
-      router.push('/products');
+      router.push('/');
     },
     onError: (error) => {
       toast({

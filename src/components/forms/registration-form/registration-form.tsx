@@ -55,9 +55,26 @@ export const PasswordInput = <TFieldValues extends Record<string, unknown> = Rec
     value: String(field.value || ''),
   };
 
+  const containsSpaces = /\s/.test(safeField.value);
+
   return (
     <div className="relative w-full">
-      <StyledInput placeholder={placeholder} type={showPassword ? 'text' : 'password'} {...safeField} />
+      <StyledInput
+        placeholder={placeholder}
+        type={showPassword ? 'text' : 'password'}
+        {...safeField}
+        className={containsSpaces ? 'border-red-500 focus:border-red-500 bg-red-50/30' : ''}
+        onChange={(e) => {
+          const { value } = e.target;
+          safeField.onChange(value);
+
+          if (/\s/.test(value)) {
+            e.target.classList.add('border-red-500');
+          } else {
+            e.target.classList.remove('border-red-500');
+          }
+        }}
+      />
       <button
         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
         onClick={() => setShowPassword(!showPassword)}
@@ -65,6 +82,9 @@ export const PasswordInput = <TFieldValues extends Record<string, unknown> = Rec
       >
         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
       </button>
+      {containsSpaces && (
+        <p className="text-xs font-medium text-red-500 mt-1 absolute">Password cannot contain spaces!</p>
+      )}
     </div>
   );
 };
@@ -240,6 +260,15 @@ export default function RegistrationForm(): JSX.Element {
     if (/\s/.test(data.email)) {
       toast({
         description: 'Email address contains whitespace. Please remove all spaces.',
+        title: 'Validation Error',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (/\s/.test(data.password) || /\s/.test(data.confirmPassword)) {
+      toast({
+        description: 'Passwords cannot contain spaces. Please remove all spaces.',
         title: 'Validation Error',
         variant: 'destructive',
       });
