@@ -32,7 +32,6 @@ export default function LoginForm(): JSX.Element | null {
       }),
     password: z
       .string()
-      .trim()
       .min(8, 'Password must be at least 8 characters')
       .refine((val) => /[a-z]/.test(val), {
         message: 'Password must contain at least one lowercase letter',
@@ -58,6 +57,9 @@ export default function LoginForm(): JSX.Element | null {
 
   function onSubmit(data: z.infer<typeof FormSchema>): void {
     if (/\s/.test(data.email)) {
+      form.setError('email', {
+        message: 'Email address contains whitespace. Please remove all spaces.',
+      });
       toast({
         description: 'Email address contains whitespace. Please remove all spaces.',
         title: 'Validation Error',
@@ -65,6 +67,19 @@ export default function LoginForm(): JSX.Element | null {
       });
       return;
     }
+
+    if (/\s/.test(data.password)) {
+      form.setError('password', {
+        message: 'Password cannot contain spaces. Please remove all spaces.',
+      });
+      toast({
+        description: 'Password cannot contain spaces. Please remove all spaces.',
+        title: 'Validation Error',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     login({
       email: data.email,
       password: data.password,
@@ -147,9 +162,11 @@ export default function LoginForm(): JSX.Element | null {
                 <PasswordInput field={field} placeholder="password" />
               </FormControl>
               <FormMessage />
-              <p className="text-xs text-muted-foreground mt-1">
-                Password must be at least 8 characters and include uppercase, lowercase, and number.
-              </p>
+              <div className="flex flex-col gap-1 mt-1">
+                <p className="text-xs text-muted-foreground mt-4">
+                  Password must be at least 8 characters and include uppercase, lowercase, and number.
+                </p>
+              </div>
             </FormItem>
           )}
         />
@@ -158,7 +175,7 @@ export default function LoginForm(): JSX.Element | null {
 
         <Button
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 text-lg transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60"
-          disabled={isLoginLoading}
+          disabled={isLoginLoading || /\s/.test(form.watch('password') || '') || /\s/.test(form.watch('email') || '')}
           type="submit"
         >
           {isLoginLoading ? (
