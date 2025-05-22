@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { CalendarIcon, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -27,21 +27,39 @@ export type PasswordInputProps<TFieldValues extends Record<string, unknown> = Re
 
 type FormData = z.infer<typeof FormSchema>;
 
-function validatePostalCode(postalCode: string, country: string): boolean {
-  const postalCodePatterns: Record<string, RegExp> = {
-    CA: /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/,
-    DE: /^\d{5}$/,
-    FR: /^\d{5}$/,
-    GB: /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i,
-    US: /^\d{5}(-\d{4})?$/,
+function validatePostalCode(postalCode: string, country: string): { format: string; isValid: boolean } {
+  const postalCodePatterns: Record<string, { format: string; pattern: RegExp }> = {
+    CA: {
+      format: 'A1A 1A1 (e.g., M5V 3L9)',
+      pattern: /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/,
+    },
+    DE: {
+      format: '12345',
+      pattern: /^\d{5}$/,
+    },
+    FR: {
+      format: '12345',
+      pattern: /^\d{5}$/,
+    },
+    GB: {
+      format: 'AA1 1AA, A1 1AA, etc.',
+      pattern: /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i,
+    },
+    US: {
+      format: '12345 or 12345-6789',
+      pattern: /^\d{5}(-\d{4})?$/,
+    },
   };
 
-  const pattern = postalCodePatterns[country];
-  if (!pattern) {
-    return true;
+  const countryPattern = postalCodePatterns[country];
+  if (!countryPattern) {
+    return { format: '', isValid: true };
   }
 
-  return pattern.test(postalCode);
+  return {
+    format: countryPattern.format,
+    isValid: countryPattern.pattern.test(postalCode),
+  };
 }
 
 export const PasswordInput = <TFieldValues extends Record<string, unknown> = Record<string, unknown>>({
@@ -56,6 +74,26 @@ export const PasswordInput = <TFieldValues extends Record<string, unknown> = Rec
   };
 
   const containsSpaces = /\s/.test(safeField.value);
+  const tooShort = safeField.value.length > 0 && safeField.value.length < 8;
+  const noLowerCase = safeField.value.length > 0 && !/[a-z]/.test(safeField.value);
+  const noUpperCase = safeField.value.length > 0 && !/[A-Z]/.test(safeField.value);
+  const noDigit = safeField.value.length > 0 && !/\d/.test(safeField.value);
+
+  const hasError = containsSpaces || tooShort || noLowerCase || noUpperCase || noDigit;
+  const errorClass = hasError ? 'border-red-500 focus:border-red-500 bg-red-50/30' : '';
+
+  let errorMessage = null;
+  if (containsSpaces) {
+    errorMessage = 'Password cannot contain spaces!';
+  } else if (tooShort) {
+    errorMessage = 'Password must be at least 8 characters';
+  } else if (noUpperCase) {
+    errorMessage = 'Password must contain an uppercase letter';
+  } else if (noLowerCase) {
+    errorMessage = 'Password must contain a lowercase letter';
+  } else if (noDigit) {
+    errorMessage = 'Password must contain a number';
+  }
 
   return (
     <div className="relative w-full">
@@ -63,28 +101,41 @@ export const PasswordInput = <TFieldValues extends Record<string, unknown> = Rec
         placeholder={placeholder}
         type={showPassword ? 'text' : 'password'}
         {...safeField}
-        className={containsSpaces ? 'border-red-500 focus:border-red-500 bg-red-50/30' : ''}
+        className={errorClass}
         onChange={(e) => {
           const { value } = e.target;
           safeField.onChange(value);
 
-          if (/\s/.test(value)) {
+          // visual on input
+          const inputHasError =
+            /\s/.test(value) ||
+            (value.length > 0 && value.length < 8) ||
+            (value.length > 0 && !/[a-z]/.test(value)) ||
+            (value.length > 0 && !/[A-Z]/.test(value)) ||
+            (value.length > 0 && !/\d/.test(value));
+
+          if (inputHasError) {
             e.target.classList.add('border-red-500');
+            e.target.classList.add('bg-red-50/30');
           } else {
             e.target.classList.remove('border-red-500');
+            e.target.classList.remove('bg-red-50/30');
           }
         }}
       />
       <button
-        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10 flex items-center justify-center"
+        onClick={(e) => {
+          e.preventDefault();
+          setShowPassword(!showPassword);
+        }}
+        style={{ top: '23px' }}
         type="button"
       >
         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
       </button>
-      {containsSpaces && (
-        <p className="text-xs font-medium text-red-500 mt-1 absolute">Password cannot contain spaces!</p>
-      )}
+
+      {errorMessage && <p className="text-xs font-medium text-red-500 mt-1">{errorMessage}</p>}
     </div>
   );
 };
@@ -155,20 +206,22 @@ const FormSchemaBase = z.object({
 });
 
 const FormSchema = FormSchemaBase.superRefine((data, ctx) => {
-  if (!validatePostalCode(data.billPostalCode, data.billCountry)) {
+  const billPostalValidation = validatePostalCode(data.billPostalCode, data.billCountry);
+  if (!billPostalValidation.isValid) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Postal code format is invalid for selected country',
+      message: `Invalid postal code format for ${data.billCountry}. Expected format: ${billPostalValidation.format}`,
       path: ['billPostalCode'],
     });
   }
 
   if (!data.sameBillShip && data.shipPostalCode) {
     const country = data.shipCountry || data.billCountry;
-    if (!validatePostalCode(data.shipPostalCode, country)) {
+    const shipPostalValidation = validatePostalCode(data.shipPostalCode, country);
+    if (!shipPostalValidation.isValid) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Postal code format is invalid for selected country',
+        message: `Invalid postal code format for ${country}. Expected format: ${shipPostalValidation.format}`,
         path: ['shipPostalCode'],
       });
     }
@@ -255,6 +308,47 @@ export default function RegistrationForm(): JSX.Element {
     },
     resolver: zodResolver(FormSchema),
   });
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'email' || !name) {
+        const email = value.email?.toString() || '';
+        if (/\s/.test(email)) {
+          form.setError('email', {
+            message: 'Email address contains whitespace. Please remove all spaces.',
+            type: 'manual',
+          });
+        } else if (form.formState.errors.email?.type === 'manual') {
+          form.clearErrors('email');
+        }
+      }
+
+      if (name === 'password' || !name) {
+        const password = value.password?.toString() || '';
+        if (/\s/.test(password)) {
+          form.setError('password', {
+            // message: 'Password cannot contain spaces. Please remove all spaces.',
+            type: 'manual',
+          });
+        } else if (form.formState.errors.password?.type === 'manual') {
+          form.clearErrors('password');
+        }
+      }
+
+      if ((name === 'password' || name === 'confirmPassword' || !name) && value.password && value.confirmPassword) {
+        if (value.password !== value.confirmPassword) {
+          form.setError('confirmPassword', {
+            message: "Passwords don't match",
+            type: 'manual',
+          });
+        } else if (form.formState.errors.confirmPassword?.type === 'manual') {
+          form.clearErrors('confirmPassword');
+        }
+      }
+    });
+
+    return (): void => subscription.unsubscribe();
+  }, [form]);
 
   function onSubmit(data: FormData): void {
     if (/\s/.test(data.email)) {
@@ -354,7 +448,7 @@ export default function RegistrationForm(): JSX.Element {
               {/\s/.test(field.value || '') && (
                 <p className="text-xs font-medium text-red-500 mt-1">Email contains spaces! Please remove them.</p>
               )}
-              <FormMessage />
+              {/* <FormMessage /> */}
             </FormItem>
           )}
         />
@@ -575,9 +669,66 @@ export default function RegistrationForm(): JSX.Element {
             <FormItem className="grow basis-full sm:basis-2/5">
               <FormLabel>Billing postal code</FormLabel>
               <FormControl>
-                <StyledInput placeholder="postal code" {...field} />
+                <StyledInput
+                  placeholder="postal code"
+                  {...field}
+                  className={
+                    form.formState.errors.billPostalCode ? 'border-red-500 focus:border-red-500 bg-red-50/30' : ''
+                  }
+                  onChange={(e) => {
+                    field.onChange(e);
+
+                    const { value } = e.target;
+                    const country = form.getValues('billCountry');
+                    const validation = validatePostalCode(value, country);
+
+                    if (!validation.isValid && value) {
+                      e.target.classList.add('border-red-500');
+                      e.target.classList.add('bg-red-50/30');
+                    } else {
+                      e.target.classList.remove('border-red-500');
+                      e.target.classList.remove('bg-red-50/30');
+                    }
+                  }}
+                />
               </FormControl>
               <FormMessage />
+
+              {((): JSX.Element => {
+                const country = form.watch('billCountry');
+                let formatMessage = '';
+                switch (country) {
+                  case 'US':
+                    formatMessage = 'Format: 12345 or 12345-6789';
+                    break;
+                  case 'CA':
+                    formatMessage = 'Format: A1A 1A1 (e.g., M5V 3L9)';
+                    break;
+                  case 'GB':
+                    formatMessage = 'Format: AA1 1AA or A1 1AA';
+                    break;
+                  case 'DE':
+                  case 'FR':
+                    formatMessage = 'Format: 12345';
+                    break;
+                  default:
+                    formatMessage = 'Format: postal code';
+                    break;
+                }
+
+                const postalCode = field.value || '';
+                const validation = validatePostalCode(postalCode, country);
+
+                if (postalCode && !validation.isValid) {
+                  return (
+                    <p className="text-xs font-medium text-red-500 mt-1">
+                      Invalid format for {country}. Expected: {validation.format}
+                    </p>
+                  );
+                }
+
+                return <p className="text-xs text-muted-foreground mt-1">{formatMessage}</p>;
+              })()}
             </FormItem>
           )}
         />
@@ -700,9 +851,66 @@ export default function RegistrationForm(): JSX.Element {
                 <FormItem className="grow basis-full sm:basis-2/5">
                   <FormLabel>Shipping postal code</FormLabel>
                   <FormControl>
-                    <StyledInput placeholder="postal code" {...field} />
+                    <StyledInput
+                      placeholder="postal code"
+                      {...field}
+                      className={
+                        form.formState.errors.shipPostalCode ? 'border-red-500 focus:border-red-500 bg-red-50/30' : ''
+                      }
+                      onChange={(e) => {
+                        field.onChange(e);
+
+                        const { value } = e.target;
+                        const country = form.getValues('shipCountry') || form.getValues('billCountry');
+                        const validation = validatePostalCode(value, country);
+
+                        if (!validation.isValid && value) {
+                          e.target.classList.add('border-red-500');
+                          e.target.classList.add('bg-red-50/30');
+                        } else {
+                          e.target.classList.remove('border-red-500');
+                          e.target.classList.remove('bg-red-50/30');
+                        }
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
+
+                  {((): JSX.Element => {
+                    const country = form.watch('shipCountry') || form.watch('billCountry');
+                    let formatMessage = '';
+                    switch (country) {
+                      case 'US':
+                        formatMessage = 'Format: 12345 or 12345-6789';
+                        break;
+                      case 'CA':
+                        formatMessage = 'Format: A1A 1A1 (e.g., M5V 3L9)';
+                        break;
+                      case 'GB':
+                        formatMessage = 'Format: AA1 1AA or A1 1AA';
+                        break;
+                      case 'DE':
+                      case 'FR':
+                        formatMessage = 'Format: 12345';
+                        break;
+                      default:
+                        formatMessage = 'Format: postal code';
+                        break;
+                    }
+
+                    const postalCode = field.value || '';
+                    const validation = validatePostalCode(postalCode, country);
+
+                    if (postalCode && !validation.isValid) {
+                      return (
+                        <p className="text-xs font-medium text-red-500 mt-1">
+                          Invalid format for {country}. Expected: {validation.format}
+                        </p>
+                      );
+                    }
+
+                    return <p className="text-xs text-muted-foreground mt-1">{formatMessage}</p>;
+                  })()}
                 </FormItem>
               )}
             />
@@ -764,7 +972,10 @@ export default function RegistrationForm(): JSX.Element {
               <FormControl>
                 <PasswordInput field={field} placeholder="confirm password" />
               </FormControl>
-              <FormMessage />
+              {form.getValues('password') !== field.value && field.value && (
+                <p className="text-xs font-medium text-red-500 mt-1">Passwords don&apos;t match</p>
+              )}
+              {/* <FormMessage /> */}
             </FormItem>
           )}
         />
@@ -773,7 +984,16 @@ export default function RegistrationForm(): JSX.Element {
 
         <Button
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 text-lg transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60"
-          disabled={isRegisterLoading}
+          disabled={
+            isRegisterLoading ||
+            /\s/.test(form.watch('password') || '') ||
+            /\s/.test(form.watch('email') || '') ||
+            form.watch('password') !== form.watch('confirmPassword') ||
+            !form.formState.isValid ||
+            !!form.formState.errors.email ||
+            !!form.formState.errors.password ||
+            !!form.formState.errors.confirmPassword
+          }
           type="submit"
         >
           {isRegisterLoading ? (

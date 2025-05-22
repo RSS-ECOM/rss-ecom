@@ -2,7 +2,7 @@
 
 import { StyledInput } from '@/components/ui/StyledInput';
 import { Button } from '@/components/ui/button';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { useCustomer } from '@/hooks/use-customer';
 import { useResponsiveToast } from '@/hooks/use-responsive-toast';
@@ -16,6 +16,7 @@ import { z } from 'zod';
 
 import { PasswordInput } from '../registration-form/registration-form';
 
+// eslint-disable-next-line max-lines-per-function
 export default function LoginForm(): JSX.Element | null {
   const { toast } = useResponsiveToast();
   const router = useRouter();
@@ -54,6 +55,80 @@ export default function LoginForm(): JSX.Element | null {
     },
     resolver: zodResolver(FormSchema),
   });
+
+  useEffect(() => {
+    let prevPassword = form.getValues('password');
+    let prevEmail = form.getValues('email');
+
+    const subscription = form.watch((value, { name }) => {
+      const currentPassword = value.password?.toString() || '';
+      const currentEmail = value.email?.toString() || '';
+
+      if ((name === 'password' || !name) && currentPassword !== prevPassword) {
+        prevPassword = currentPassword;
+
+        if (form.formState.errors.password?.type === 'manual') {
+          form.clearErrors('password');
+        }
+
+        if (/\s/.test(currentPassword)) {
+          setTimeout(() => {
+            form.setError('password', {
+              message: 'Password cannot contain spaces',
+              type: 'manual',
+            });
+          }, 0);
+        } else if (currentPassword.length > 0 && currentPassword.length < 8) {
+          setTimeout(() => {
+            form.setError('password', {
+              message: 'Password must be at least 8 characters',
+              type: 'manual',
+            });
+          }, 0);
+        } else if (currentPassword.length > 0 && !/[a-z]/.test(currentPassword)) {
+          setTimeout(() => {
+            form.setError('password', {
+              message: 'Password must contain a lowercase letter',
+              type: 'manual',
+            });
+          }, 0);
+        } else if (currentPassword.length > 0 && !/[A-Z]/.test(currentPassword)) {
+          setTimeout(() => {
+            form.setError('password', {
+              message: 'Password must contain an uppercase letter',
+              type: 'manual',
+            });
+          }, 0);
+        } else if (currentPassword.length > 0 && !/\d/.test(currentPassword)) {
+          setTimeout(() => {
+            form.setError('password', {
+              message: 'Password must contain a number',
+              type: 'manual',
+            });
+          }, 0);
+        }
+      }
+
+      if ((name === 'email' || !name) && currentEmail !== prevEmail) {
+        prevEmail = currentEmail;
+
+        if (form.formState.errors.email?.type === 'manual') {
+          form.clearErrors('email');
+        }
+
+        if (currentEmail && /\s/.test(currentEmail)) {
+          setTimeout(() => {
+            form.setError('email', {
+              message: 'Email address contains whitespace',
+              type: 'manual',
+            });
+          }, 0);
+        }
+      }
+    });
+
+    return (): void => subscription.unsubscribe();
+  }, [form]);
 
   function onSubmit(data: z.infer<typeof FormSchema>): void {
     if (/\s/.test(data.email)) {
@@ -147,7 +222,7 @@ export default function LoginForm(): JSX.Element | null {
               {/\s/.test(field.value || '') && (
                 <p className="text-xs font-medium text-red-500 mt-1">Email contains spaces! Please remove them.</p>
               )}
-              <FormMessage />
+              {/* <FormMessage /> */}
             </FormItem>
           )}
         />
@@ -161,12 +236,7 @@ export default function LoginForm(): JSX.Element | null {
               <FormControl>
                 <PasswordInput field={field} placeholder="password" />
               </FormControl>
-              <FormMessage />
-              <div className="flex flex-col gap-1 mt-1">
-                <p className="text-xs text-muted-foreground mt-4">
-                  Password must be at least 8 characters and include uppercase, lowercase, and number.
-                </p>
-              </div>
+              {/* <FormMessage /> */}
             </FormItem>
           )}
         />
@@ -175,7 +245,20 @@ export default function LoginForm(): JSX.Element | null {
 
         <Button
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 text-lg transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60"
-          disabled={isLoginLoading || /\s/.test(form.watch('password') || '') || /\s/.test(form.watch('email') || '')}
+          disabled={
+            Boolean(isLoginLoading) ||
+            !form.formState.isValid ||
+            Boolean(Object.keys(form.formState.errors).length > 0) ||
+            Boolean(/\s/.test(String(form.watch('password') || ''))) ||
+            Boolean(/\s/.test(String(form.watch('email') || ''))) ||
+            Boolean(
+              form.watch('password') &&
+                (form.watch('password').length < 8 ||
+                  !/[a-z]/.test(form.watch('password')) ||
+                  !/[A-Z]/.test(form.watch('password')) ||
+                  !/\d/.test(form.watch('password'))),
+            )
+          }
           type="submit"
         >
           {isLoginLoading ? (
