@@ -100,7 +100,7 @@ export default class CustomerClient {
     }
   }
 
-  public async callApi(path: string, options: RequestInit = {}): Promise<unknown> {
+  public async callApi<T>(path: string, options: RequestInit = {}): Promise<T | null> {
     const url = `${this.apiUrl}${path}`;
 
     try {
@@ -142,7 +142,8 @@ export default class CustomerClient {
         return null;
       }
 
-      const result: unknown = await response.json();
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const result: T = (await response.json()) as T;
       return result;
     } catch (error) {
       console.error(`API call failed: ${path}`, error);
