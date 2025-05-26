@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { Client } from '@commercetools/ts-client';
 
 import myTokenCache from '@/app/api/token-cache';
@@ -6,6 +7,7 @@ import {
   type Customer,
   type CustomerDraft,
   type CustomerSignInResult,
+  type ProductProjection,
   type ProductProjectionPagedQueryResponse,
   createApiBuilderFromCtpClient,
 } from '@commercetools/platform-sdk';
@@ -63,9 +65,14 @@ export default class CustomerClient {
 
   constructor() {
     this.ctpClient = createCtpClient();
+
+    this.customerClient = createCtpClient();
+    this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
+
     const token = Cookies.get('login');
     if (token) {
       this.customerClient = createRefreshCustomerClient(token);
+      this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
     }
   }
 
@@ -182,11 +189,65 @@ export default class CustomerClient {
     }
   }
 
-  public async getProducts(): Promise<ProductProjectionPagedQueryResponse | null> {
+  public async getProductById(id: string): Promise<ProductProjection | null> {
     if (this.customerRoot) {
-      const response = await this.customerRoot.productProjections().get().execute();
-      return response.body;
+      try {
+        const response = await this.customerRoot.productProjections().withId({ ID: id }).get().execute();
+        return response.body;
+      } catch (error) {
+        console.error(`Error fetching product with id ${id}:`, error);
+        return null;
+      }
     }
+    return null;
+  }
+
+  public async getProducts(): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log('Getting products... customerRoot available:', !!this.customerRoot);
+
+    if (this.customerRoot) {
+      try {
+        const response = await this.customerRoot.productProjections().get().execute();
+        console.log('Products response:', response.statusCode, 'Total items:', response.body?.total);
+        return response.body;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        return null;
+      }
+    }
+    console.warn('No customerRoot available to fetch products');
+    return null;
+  }
+
+  public async getProductsByCategory(categoryId: string): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log(`Getting products for category ${categoryId}...`);
+
+    if (this.customerRoot) {
+      try {
+        const response = await this.customerRoot
+          .productProjections()
+          .get({
+            queryArgs: {
+              limit: 100,
+              where: [`categories(id="${categoryId}")`, 'published=true'],
+            },
+          })
+          .execute();
+
+        console.log(
+          `Products for category ${categoryId} response:`,
+          response.statusCode,
+          'Total items:',
+          response.body?.total,
+        );
+        return response.body;
+      } catch (error) {
+        console.error(`Error fetching products for category ${categoryId}:`, error);
+        return null;
+      }
+    }
+
+    console.warn('No customerRoot available to fetch products by category');
     return null;
   }
 
@@ -235,7 +296,6 @@ export default class CustomerClient {
       }
     } catch (error) {
       console.error('Error refreshing token:', error);
-      // Очищаем токены при ошибке
       myTokenCache.tokenCache.set({
         expirationTime: 0,
         token: '',
