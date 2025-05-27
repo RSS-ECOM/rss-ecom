@@ -151,6 +151,19 @@ export default class CustomerClient {
     }
   }
 
+  public async getCustomerInfo(): Promise<Customer | null> {
+    try {
+      if (this.customerRoot) {
+        const response = await this.customerRoot.me().get().execute();
+        return response.body;
+      }
+    } catch (error) {
+      console.error('Error fetching customer profile:', error);
+      return null;
+    }
+    return null;
+  }
+
   public async getMe(): Promise<ApiResponse | null> {
     if (!myTokenCache.refreshToken) {
       return null;
