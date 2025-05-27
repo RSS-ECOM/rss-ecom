@@ -2,8 +2,10 @@
 
 import type { Customer } from '@commercetools/platform-sdk';
 
+import PersonalInfoForm from '@/components/forms/personal-info-form/personal-info-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCustomerClient } from '@/lib/customer-client';
+import { Edit } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function CustomerInfo(): JSX.Element {
@@ -20,6 +22,8 @@ export default function CustomerInfo(): JSX.Element {
     }
   }, [customerClient]);
 
+  const [modalOpen, setModalOpen] = useState(false);
+
   const getAddressTitle = (customerData: Customer, id: string | undefined): string => {
     if (customerData.defaultBillingAddressId === id) {
       return 'Default billing address';
@@ -30,16 +34,27 @@ export default function CustomerInfo(): JSX.Element {
     return 'Additional address';
   };
 
+  const handleEditPersonalInfoClick = (): void => {
+    setModalOpen(true);
+  };
+
   return (
     <div className="flex flex-col gap-8">
-      <Card className="w-full max-w-xl">
+      <Card className="group relative w-full max-w-xl">
         <CardHeader>
           <CardTitle>Personal info</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col">
+            <button
+              className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2"
+              onClick={handleEditPersonalInfoClick}
+            >
+              <Edit className="h-5 w-5"></Edit>
+            </button>
             {customerData ? (
               <div>
+                <p>E-mail: {customerData.email}</p>
                 <p>Name: {customerData.firstName}</p>
                 <p>Last name: {customerData.lastName}</p>
                 <p>Date of birth: {customerData.dateOfBirth}</p>
@@ -78,6 +93,12 @@ export default function CustomerInfo(): JSX.Element {
           </div>
         </CardContent>
       </Card>
+      <PersonalInfoForm
+        customerData={customerData}
+        modalOpen={modalOpen}
+        setCustomerData={setCustomerData}
+        setModalOpen={setModalOpen}
+      ></PersonalInfoForm>
     </div>
   );
 }
