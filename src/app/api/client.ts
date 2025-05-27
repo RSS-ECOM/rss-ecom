@@ -349,6 +349,31 @@ export default class CustomerClient {
       this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
     }
   }
+
+  public async updatePersonalInfo(personalInfo: { [key: string]: string }): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [
+                { action: 'setFirstName', firstName: personalInfo.firstName },
+                { action: 'setLastName', lastName: personalInfo.lastName },
+                { action: 'changeEmail', email: personalInfo.email },
+                { action: 'setDateOfBirth', dateOfBirth: personalInfo.dateOfBirth },
+              ],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
 }
 
 interface Address {
