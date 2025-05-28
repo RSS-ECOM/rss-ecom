@@ -13,8 +13,15 @@ export function useProducts() {
     queryKey: ['products'],
     queryFn: async () => {
       try {
-        const productsData = await customerClient.getProducts();
-        return productsData?.results || [];
+        if (!customerClient) return [];
+
+        const response = await customerClient.getProducts({
+          expand: ['productType', 'prices'],
+        });
+
+        console.log('Products response:', response);
+
+        return response?.results || [];
       } catch (err) {
         console.error('Error fetching products:', err);
         throw err;

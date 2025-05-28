@@ -216,19 +216,54 @@ export default class CustomerClient {
     return null;
   }
 
-  public async getProducts(): Promise<ProductProjectionPagedQueryResponse | null> {
+  public async getProducts(options?: {
+    expand?: string[];
+    limit?: number;
+    offset?: number;
+  }): Promise<ProductProjectionPagedQueryResponse | null> {
     console.log('Getting products... customerRoot available:', !!this.customerRoot);
 
     if (this.customerRoot) {
       try {
-        const response = await this.customerRoot.productProjections().get().execute();
+        const queryArgs: {
+          expand?: string[];
+          limit?: number;
+          offset?: number;
+          staged?: boolean;
+        } = {
+          limit: options?.limit || 100,
+          staged: false,
+        };
+
+        if (options?.offset) {
+          queryArgs.offset = options.offset;
+        }
+
+        if (options?.expand && options.expand.length > 0) {
+          queryArgs.expand = options.expand;
+        }
+
+        const response = await this.customerRoot
+          .productProjections()
+          .get({
+            queryArgs,
+          })
+          .execute();
+
         console.log('Products response:', response.statusCode, 'Total items:', response.body?.total);
+
+        if (response.body?.results?.length > 0) {
+          const firstProduct = response.body.results[0];
+          console.log('First product prices:', firstProduct.masterVariant.prices);
+        }
+
         return response.body;
       } catch (error) {
         console.error('Error fetching products:', error);
         return null;
       }
     }
+
     console.warn('No customerRoot available to fetch products');
     return null;
   }
