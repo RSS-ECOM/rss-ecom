@@ -30,6 +30,12 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
 
   const { data: product, error, isLoading } = useProduct(id);
 
+  const price = product?.masterVariant?.prices?.[0].value?.centAmount
+    ? (product.masterVariant.prices[0].value.centAmount / 100).toFixed(2)
+    : null;
+  const discounted = product?.masterVariant?.prices?.[0].discounted?.value?.centAmount
+    ? (product.masterVariant.prices[0].discounted.value.centAmount / 100).toFixed(2)
+    : null;
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -91,6 +97,17 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
             )}
           </div>
           <div>{product.description?.['en-US']}</div>
+          {price &&
+            (discounted ? (
+              <div className="flex items-end gap-2">
+                <span className="text-lg bold text-red-500">{discounted} $</span>
+                <span className="text-sm line-through">{price} $</span>
+              </div>
+            ) : (
+              <div>
+                <span className="text-lg bold">{price} $</span>
+              </div>
+            ))}
           <Button className="w-80">Add to Cart</Button>
         </div>
 
