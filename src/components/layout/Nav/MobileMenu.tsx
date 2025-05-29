@@ -1,12 +1,14 @@
 'use client';
 
+import type { FormEvent } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { useCustomer } from '@/hooks/use-customer';
 import { cn } from '@/lib/utils';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useRef } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface MobileMenuProps {
   isLoggedIn: boolean;
@@ -18,11 +20,21 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
   const { logout } = useCustomer();
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
   const handleLogoutClick = useCallback(() => {
     logout();
     onClose();
   }, [logout, onClose]);
+
+  const handleSearchSubmit = (e: FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+      onClose();
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent): void {
@@ -111,16 +123,18 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
       ref={menuRef}
     >
       <div className="container py-4 md:hidden">
-        <div className="flex pb-3 items-center">
+        <form className="flex pb-3 items-center" onSubmit={handleSearchSubmit}>
           <input
             className="flex-grow border rounded-l-md h-9 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search books..."
             type="text"
+            value={searchQuery}
           />
-          <Button className="h-9 rounded-l-none" size="sm">
+          <Button className="h-9 rounded-l-none" size="sm" type="submit">
             <Search className="h-4 w-4" />
           </Button>
-        </div>
+        </form>
         <nav className="flex flex-col space-y-1">
           <MobileNavLink href="/products">All Books</MobileNavLink>
           <MobileNavLink href="/categories/fiction">Fiction</MobileNavLink>

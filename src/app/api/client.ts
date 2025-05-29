@@ -231,12 +231,15 @@ export default class CustomerClient {
           const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
           const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
 
+          console.log(`Price filter values: min=${minPrice}, max=${maxPrice}`);
+
           if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
-            filterQuery.push(`variants.prices.centAmount:range (${minPrice} to ${maxPrice})`);
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+            console.log(`Added price range filter: variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
           } else if (minPrice > 0) {
-            filterQuery.push(`variants.prices.centAmount:range (${minPrice} to *)`);
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to *)`);
           } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
-            filterQuery.push(`variants.prices.centAmount:range (* to ${maxPrice})`);
+            filterQuery.push(`variants.price.centAmount:range(* to ${maxPrice})`);
           }
         }
 
@@ -245,11 +248,13 @@ export default class CustomerClient {
           Array.isArray(filterParams.categoryIds) &&
           filterParams.categoryIds.length > 0
         ) {
-          const categoryFilter = filterParams.categoryIds
-            .map((categoryId) => `categories.id:"${categoryId}"`)
-            .join(' or ');
-
-          filterQuery.push(`(${categoryFilter})`);
+          if (filterParams.categoryIds.length === 1) {
+            filterQuery.push(`categories.id:"${filterParams.categoryIds[0]}"`);
+          } else {
+            filterParams.categoryIds.forEach((categoryId) => {
+              filterQuery.push(`categories.id:"${categoryId}"`);
+            });
+          }
         }
 
         console.log('Filter query:', filterQuery);
@@ -315,12 +320,15 @@ export default class CustomerClient {
           const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
           const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
 
+          console.log(`Price filter values: min=${minPrice}, max=${maxPrice}`);
+
           if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
-            filterQuery.push(`variants.prices.centAmount:range (${minPrice} to ${maxPrice})`);
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+            console.log(`Added price range filter: variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
           } else if (minPrice > 0) {
-            filterQuery.push(`variants.prices.centAmount:range (${minPrice} to *)`);
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to *)`);
           } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
-            filterQuery.push(`variants.prices.centAmount:range (* to ${maxPrice})`);
+            filterQuery.push(`variants.price.centAmount:range(* to ${maxPrice})`);
           }
         }
 
@@ -329,9 +337,13 @@ export default class CustomerClient {
           Array.isArray(filterParams.categoryIds) &&
           filterParams.categoryIds.length > 0
         ) {
-          const categoryFilter = filterParams.categoryIds.map((catId) => `categories.id:"${catId}"`).join(' or ');
-
-          filterQuery.push(`(${categoryFilter})`);
+          if (filterParams.categoryIds.length === 1) {
+            filterQuery.push(`categories.id:"${filterParams.categoryIds[0]}"`);
+          } else {
+            filterParams.categoryIds.forEach((categoryId) => {
+              filterQuery.push(`categories.id:"${categoryId}"`);
+            });
+          }
         }
 
         console.log('Filter query for category:', filterQuery);

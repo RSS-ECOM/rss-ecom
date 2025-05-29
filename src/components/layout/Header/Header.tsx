@@ -1,5 +1,7 @@
 'use client';
 
+import type { FormEvent } from 'react';
+
 import LogoDesktop from '@/components/ui/Logo/LogoDesktop';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +16,7 @@ import { useCustomer } from '@/hooks/use-customer';
 import useAuthStore from '@/store/auth-store';
 import { Menu, MoonIcon, Search, ShoppingCart, SunIcon, User, X } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -25,10 +28,19 @@ export default function Header(): JSX.Element {
   const { logout } = useCustomer();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { setTheme, theme } = useTheme();
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
   const handleLogoutClick = useCallback(() => {
     logout();
   }, [logout]);
+
+  const handleSearchSubmit = (e: FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     const handleResize = (): void => {
@@ -52,16 +64,18 @@ export default function Header(): JSX.Element {
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
-          <div className="hidden md:flex">
-            <Button className="rounded-r-none" size="icon" variant="ghost">
+          <form className="hidden md:flex" onSubmit={handleSearchSubmit}>
+            <Button className="rounded-r-none" size="icon" type="submit" variant="ghost">
               <Search className="h-5 w-5" />
             </Button>
             <input
               className="max-w-[150px] border-y border-r rounded-r-md h-10 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search books..."
               type="text"
+              value={searchQuery}
             />
-          </div>
+          </form>
 
           <Button
             className="ml-2"
