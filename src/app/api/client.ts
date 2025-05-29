@@ -223,18 +223,20 @@ export default class CustomerClient {
 
     if (this.customerRoot) {
       try {
-        let whereQuery = 'published=true';
+        const filterQuery: string[] = [];
+
+        filterQuery.push('published:true');
 
         if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
           const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
           const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
 
-          if (minPrice > 0) {
-            whereQuery += ` AND masterVariant(prices(value(centAmount>=${minPrice})))`;
-          }
-
-          if (maxPrice < Number.MAX_SAFE_INTEGER) {
-            whereQuery += ` AND masterVariant(prices(value(centAmount<=${maxPrice})))`;
+          if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.prices.centAmount:range (${minPrice} to ${maxPrice})`);
+          } else if (minPrice > 0) {
+            filterQuery.push(`variants.prices.centAmount:range (${minPrice} to *)`);
+          } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.prices.centAmount:range (* to ${maxPrice})`);
           }
         }
 
@@ -243,22 +245,45 @@ export default class CustomerClient {
           Array.isArray(filterParams.categoryIds) &&
           filterParams.categoryIds.length > 0
         ) {
-          const categoryConditions = filterParams.categoryIds
-            .map((categoryId) => `categories(id="${categoryId}")`)
-            .join(' OR ');
+          const categoryFilter = filterParams.categoryIds
+            .map((categoryId) => `categories.id:"${categoryId}"`)
+            .join(' or ');
 
-          whereQuery += ` AND (${categoryConditions})`;
-          console.log('Using category filtering');
+          filterQuery.push(`(${categoryFilter})`);
         }
 
-        console.log('Final where query:', whereQuery);
+        console.log('Filter query:', filterQuery);
+
+        let sort: string[] = [];
+        if (filterParams.sortBy) {
+          switch (filterParams.sortBy) {
+            case 'price-asc':
+              sort = ['price asc'];
+              break;
+            case 'price-desc':
+              sort = ['price desc'];
+              break;
+            case 'name-asc':
+              sort = ['name.en-US asc'];
+              break;
+            case 'name-desc':
+              sort = ['name.en-US desc'];
+              break;
+            default:
+              break;
+          }
+        }
+
+        console.log('Sorting parameters:', sort);
 
         const response = await this.customerRoot
           .productProjections()
+          .search()
           .get({
             queryArgs: {
+              filter: filterQuery,
               limit: 100,
-              where: whereQuery,
+              sort: sort.length > 0 ? sort : undefined,
             },
           })
           .execute();
@@ -281,18 +306,21 @@ export default class CustomerClient {
 
     if (this.customerRoot) {
       try {
-        let whereQuery = `categories(id="${categoryId}") AND published=true`;
+        const filterQuery: string[] = [];
+
+        filterQuery.push(`categories.id:"${categoryId}"`);
+        filterQuery.push('published:true');
 
         if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
           const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
           const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
 
-          if (minPrice > 0) {
-            whereQuery += ` AND masterVariant(prices(value(centAmount>=${minPrice})))`;
-          }
-
-          if (maxPrice < Number.MAX_SAFE_INTEGER) {
-            whereQuery += ` AND masterVariant(prices(value(centAmount<=${maxPrice})))`;
+          if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.prices.centAmount:range (${minPrice} to ${maxPrice})`);
+          } else if (minPrice > 0) {
+            filterQuery.push(`variants.prices.centAmount:range (${minPrice} to *)`);
+          } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.prices.centAmount:range (* to ${maxPrice})`);
           }
         }
 
@@ -301,22 +329,41 @@ export default class CustomerClient {
           Array.isArray(filterParams.categoryIds) &&
           filterParams.categoryIds.length > 0
         ) {
-          const categoryConditions = filterParams.categoryIds
-            .map((categoryId) => `categories(id="${categoryId}")`)
-            .join(' OR ');
+          const categoryFilter = filterParams.categoryIds.map((catId) => `categories.id:"${catId}"`).join(' or ');
 
-          whereQuery += ` AND (${categoryConditions})`;
-          console.log('Using category filtering');
+          filterQuery.push(`(${categoryFilter})`);
         }
 
-        console.log('Final where query for category:', whereQuery);
+        console.log('Filter query for category:', filterQuery);
+
+        let sort: string[] = [];
+        if (filterParams.sortBy) {
+          switch (filterParams.sortBy) {
+            case 'price-asc':
+              sort = ['price asc'];
+              break;
+            case 'price-desc':
+              sort = ['price desc'];
+              break;
+            case 'name-asc':
+              sort = ['name.en-US asc'];
+              break;
+            case 'name-desc':
+              sort = ['name.en-US desc'];
+              break;
+            default:
+              break;
+          }
+        }
 
         const response = await this.customerRoot
           .productProjections()
+          .search()
           .get({
             queryArgs: {
+              filter: filterQuery,
               limit: 100,
-              where: whereQuery,
+              sort: sort.length > 0 ? sort : undefined,
             },
           })
           .execute();

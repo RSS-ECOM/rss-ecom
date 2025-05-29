@@ -15,6 +15,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FilterGroup, FilterState } from './ProductFilters';
 
 import ProductFilters from './ProductFilters';
+import ProductSort, { type SortOption, isSortOption } from './ProductSort';
 
 interface ProductListProps {
   categoryId?: string;
@@ -44,6 +45,13 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
   const [allLoadedProducts, setAllLoadedProducts] = useState<ProductProjection[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductProjection[]>([]);
   const [isUsingLocalFilter, setIsUsingLocalFilter] = useState(false);
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    if (typeof window !== 'undefined') {
+      const savedSort = localStorage.getItem('productSort');
+      return savedSort && isSortOption(savedSort) ? savedSort : 'default';
+    }
+    return 'default';
+  });
 
   useEffect(
     () =>
@@ -87,7 +95,6 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
 
   const allProducts = useProducts(filterParams);
   const categoryProducts = useProductsByCategory(categoryId, filterParams);
-
   const { error, isLoading, products } = categoryId ? categoryProducts : allProducts;
 
   const handleFilterChange = useCallback(
@@ -106,7 +113,9 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
         const hasAuthorFilter = authorFilter !== undefined && Array.isArray(authorFilter) && authorFilter.length > 0;
 
         if (hasAuthorFilter && allLoadedProducts.length > 0) {
-          const apiParams: Record<string, unknown> = {};
+          const apiParams: Record<string, unknown> = {
+            sortBy: filterParams.sortBy,
+          };
 
           Object.entries(newFilters).forEach(([key, value]) => {
             if (key !== 'author') {
@@ -157,7 +166,9 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
 
           setFilterParams(apiParams);
         } else {
-          const apiParams: Record<string, unknown> = {};
+          const apiParams: Record<string, unknown> = {
+            sortBy: filterParams.sortBy,
+          };
 
           Object.entries(newFilters).forEach(([key, value]) => {
             if (key === 'price' && Array.isArray(value)) {
@@ -176,7 +187,7 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
         }
       }, 500);
     },
-    [filterGroups, allLoadedProducts],
+    [allLoadedProducts, filterParams.sortBy, filterGroups],
   );
 
   useEffect(() => {
@@ -282,15 +293,18 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
           });
 
           console.log('restore filterParams:', apiParams);
+          apiParams.sortBy = filterParams.sortBy;
           setFilterParams(apiParams);
         }
       } else if (Object.keys(filters).length > 0) {
         console.log('Reset filters because persistentFilters is empty');
         setFilters({});
-        setFilterParams({});
+        setFilterParams((prevParams) => ({
+          sortBy: prevParams.sortBy,
+        }));
       }
     }
-  }, [products, filters, persistentFilters]);
+  }, [products, filters, persistentFilters, filterParams.sortBy]);
 
   function compareFilterObjects(obj1: FilterState, obj2: FilterState): boolean {
     const keys1 = Object.keys(obj1);
@@ -316,6 +330,21 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
     });
   }
 
+  // sorting
+  const handleSortChange = useCallback((newSortOption: SortOption): void => {
+    console.log('Sorting changed to:', newSortOption);
+    setSortOption(newSortOption);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('productSort', newSortOption);
+    }
+
+    setFilterParams((prevParams) => ({
+      ...prevParams,
+      sortBy: newSortOption,
+    }));
+  }, []);
+
   const handleAddToCart = (): void => {
     // TBA
   };
@@ -329,6 +358,10 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="col-span-1 md:col-span-4 flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">{categoryId ? 'Category Products' : 'All Products'}</h2>
+          <ProductSort onSortChange={handleSortChange} selectedSort={sortOption} />
+        </div>
         <ProductFilters className="sticky top-24" filterGroups={filterGroups} onFilterChange={handleFilterChange} />
 
         <div className="col-span-1 md:col-span-3">
@@ -361,6 +394,10 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
   if (error || !products || products.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="col-span-1 md:col-span-4 flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">{categoryId ? 'Category Products' : 'All Products'}</h2>
+          <ProductSort onSortChange={handleSortChange} selectedSort={sortOption} />
+        </div>
         <div className="hidden md:block">
           <ProductFilters filterGroups={filterGroups} onFilterChange={handleFilterChange} />
         </div>
@@ -384,6 +421,10 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="col-span-1 md:col-span-4 flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">{categoryId ? 'Category Products' : 'All Products'}</h2>
+        <ProductSort onSortChange={handleSortChange} selectedSort={sortOption} />
+      </div>
       <ProductFilters className="sticky top-24" filterGroups={filterGroups} onFilterChange={handleFilterChange} />
 
       <div className="col-span-1 md:col-span-3">
