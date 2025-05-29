@@ -2,7 +2,9 @@
 
 import type { Customer } from '@commercetools/platform-sdk';
 
+import ChangePasswordForm from '@/components/forms/change-password-form/change-password-form';
 import PersonalInfoForm from '@/components/forms/personal-info-form/personal-info-form';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCustomerClient } from '@/lib/customer-client';
 import { Edit } from 'lucide-react';
@@ -23,6 +25,7 @@ export default function CustomerInfo(): JSX.Element {
   }, [customerClient]);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
   const getAddressTitle = (customerData: Customer, id: string | undefined): string => {
     if (customerData.defaultBillingAddressId === id) {
@@ -36,6 +39,10 @@ export default function CustomerInfo(): JSX.Element {
 
   const handleEditPersonalInfoClick = (): void => {
     setModalOpen(true);
+  };
+
+  const handleChangePasswordClick = (): void => {
+    setPasswordModalOpen(true);
   };
 
   return (
@@ -62,6 +69,16 @@ export default function CustomerInfo(): JSX.Element {
             ) : (
               <p>No data</p>
             )}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="group relative w-full max-w-xl">
+        <CardHeader>
+          <CardTitle>Password change</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col">
+            <Button onClick={handleChangePasswordClick}>Change Password</Button>
           </div>
         </CardContent>
       </Card>
@@ -99,6 +116,12 @@ export default function CustomerInfo(): JSX.Element {
         setCustomerData={setCustomerData}
         setModalOpen={setModalOpen}
       ></PersonalInfoForm>
+      <ChangePasswordForm
+        customerData={customerData}
+        modalOpen={passwordModalOpen}
+        setCustomerData={setCustomerData}
+        setModalOpen={setPasswordModalOpen}
+      ></ChangePasswordForm>
     </div>
   );
 }
