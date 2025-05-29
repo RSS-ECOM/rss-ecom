@@ -216,69 +216,107 @@ export default class CustomerClient {
     return null;
   }
 
-  public async getProducts(options?: {
-    expand?: string[];
-    limit?: number;
-    offset?: number;
-  }): Promise<ProductProjectionPagedQueryResponse | null> {
-    console.log('Getting products... customerRoot available:', !!this.customerRoot);
+  public async getProducts(
+    filterParams: Record<string, unknown> = {},
+  ): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log('Getting products with filters:', filterParams);
 
     if (this.customerRoot) {
       try {
-        const queryArgs: {
-          expand?: string[];
-          limit?: number;
-          offset?: number;
-          staged?: boolean;
-        } = {
-          limit: options?.limit || 100,
-          staged: false,
-        };
+        let whereQuery = 'published=true';
 
-        if (options?.offset) {
-          queryArgs.offset = options.offset;
+        if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
+          const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
+          const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
+
+          if (minPrice > 0) {
+            whereQuery += ` AND masterVariant(prices(value(centAmount>=${minPrice})))`;
+          }
+
+          if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            whereQuery += ` AND masterVariant(prices(value(centAmount<=${maxPrice})))`;
+          }
         }
 
-        if (options?.expand && options.expand.length > 0) {
-          queryArgs.expand = options.expand;
+        if (
+          filterParams.categoryIds &&
+          Array.isArray(filterParams.categoryIds) &&
+          filterParams.categoryIds.length > 0
+        ) {
+          const categoryConditions = filterParams.categoryIds
+            .map((categoryId) => `categories(id="${categoryId}")`)
+            .join(' OR ');
+
+          whereQuery += ` AND (${categoryConditions})`;
+          console.log('Using category filtering');
         }
 
-        const response = await this.customerRoot
-          .productProjections()
-          .get({
-            queryArgs,
-          })
-          .execute();
+        console.log('Final where query:', whereQuery);
 
-        console.log('Products response:', response.statusCode, 'Total items:', response.body?.total);
-
-        if (response.body?.results?.length > 0) {
-          const firstProduct = response.body.results[0];
-          console.log('First product prices:', firstProduct.masterVariant.prices);
-        }
-
-        return response.body;
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        return null;
-      }
-    }
-
-    console.warn('No customerRoot available to fetch products');
-    return null;
-  }
-
-  public async getProductsByCategory(categoryId: string): Promise<ProductProjectionPagedQueryResponse | null> {
-    console.log(`Getting products for category ${categoryId}...`);
-
-    if (this.customerRoot) {
-      try {
         const response = await this.customerRoot
           .productProjections()
           .get({
             queryArgs: {
               limit: 100,
-              where: [`categories(id="${categoryId}")`, 'published=true'],
+              where: whereQuery,
+            },
+          })
+          .execute();
+
+        console.log('Products response:', response.statusCode, 'Total items:', response.body?.total);
+        return response.body;
+      } catch (error) {
+        console.error('Error fetching products with filters:', error);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  public async getProductsByCategory(
+    categoryId: string,
+    filterParams: Record<string, unknown> = {},
+  ): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log(`Getting products for category ${categoryId} with filters:`, filterParams);
+
+    if (this.customerRoot) {
+      try {
+        let whereQuery = `categories(id="${categoryId}") AND published=true`;
+
+        if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
+          const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
+          const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
+
+          if (minPrice > 0) {
+            whereQuery += ` AND masterVariant(prices(value(centAmount>=${minPrice})))`;
+          }
+
+          if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            whereQuery += ` AND masterVariant(prices(value(centAmount<=${maxPrice})))`;
+          }
+        }
+
+        if (
+          filterParams.categoryIds &&
+          Array.isArray(filterParams.categoryIds) &&
+          filterParams.categoryIds.length > 0
+        ) {
+          const categoryConditions = filterParams.categoryIds
+            .map((categoryId) => `categories(id="${categoryId}")`)
+            .join(' OR ');
+
+          whereQuery += ` AND (${categoryConditions})`;
+          console.log('Using category filtering');
+        }
+
+        console.log('Final where query for category:', whereQuery);
+
+        const response = await this.customerRoot
+          .productProjections()
+          .get({
+            queryArgs: {
+              limit: 100,
+              where: whereQuery,
             },
           })
           .execute();
