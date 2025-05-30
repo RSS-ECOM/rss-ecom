@@ -374,6 +374,7 @@ export default function ProductFilters({
                 <div className="flex items-center space-x-2" key={option.id}>
                   <Checkbox
                     checked={checked}
+                    className="dark:[border:2px_solid_hsl(var(--primary))] dark:data-[state=checked]:[border-color:hsl(var(--primary))]"
                     id={`${group.id}-${option.id}`}
                     onCheckedChange={(value) => handleCheckboxChange(group.id, option.id, !!value)}
                   />

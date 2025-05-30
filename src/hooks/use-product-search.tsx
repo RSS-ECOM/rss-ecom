@@ -19,7 +19,9 @@ export function useProductSearch(categoryId?: string, initialSearchQuery?: strin
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [filterParams, setFilterParams] = useState<Record<string, unknown>>({});
-  const [searchQuery, setSearchQuery] = useState<string | null>(initialSearchQuery || null);
+  const [searchQuery, setSearchQuery] = useState<string | null>(
+    initialSearchQuery && initialSearchQuery.trim() !== '' ? initialSearchQuery : null,
+  );
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     if (typeof window !== 'undefined') {
       const savedSort = localStorage.getItem('productSort');
@@ -52,6 +54,7 @@ export function useProductSearch(categoryId?: string, initialSearchQuery?: strin
         };
 
         if (searchQuery) {
+          result = await customerClient.searchProducts(searchQuery, paramsWithSort);
         } else if (categoryId) {
           result = await customerClient.getProductsByCategory(categoryId, paramsWithSort);
         } else {
@@ -80,12 +83,18 @@ export function useProductSearch(categoryId?: string, initialSearchQuery?: strin
     setSearchQuery(query ? query.trim() : null);
   }, []);
 
-  const handleSortChange = useCallback((option: SortOption) => {
-    setSortOption(option);
+  const handleSortChange = useCallback((newSortOption: SortOption): void => {
+    console.log('Sorting changed to:', newSortOption);
+    setSortOption(newSortOption);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('productSort', option);
+      localStorage.setItem('productSort', newSortOption);
     }
+
+    setFilterParams((prevParams) => ({
+      ...prevParams,
+      sortBy: newSortOption,
+    }));
   }, []);
 
   return {

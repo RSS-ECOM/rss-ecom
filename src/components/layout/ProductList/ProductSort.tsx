@@ -27,7 +27,7 @@ export default function ProductSort({ className = '', onSortChange, selectedSort
     <div className={`flex items-center gap-3 ${className}`}>
       <span className="text-sm font-medium">Sort by:</span>
       <Select defaultValue={selectedSort} onValueChange={handleSortChange} value={selectedSort}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Sort products" />
         </SelectTrigger>
         <SelectContent>

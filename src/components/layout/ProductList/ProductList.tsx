@@ -10,22 +10,30 @@ import { useCustomerClient } from '@/lib/customer-client';
 import { type ProductProjection } from '@commercetools/platform-sdk';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { FilterGroup, FilterState } from './ProductFilters';
 
 import ProductFilters from './ProductFilters';
 import ProductSort, { type SortOption, isSortOption } from './ProductSort';
 
-interface ProductListProps {
+// ==================== TYPES ====================
+type ProductListProps = {
   categoryId?: string;
-}
+  customProducts?: ProductProjection[];
+  searchQuery?: null | string;
+};
 
 interface LocalizedString {
   [key: string]: string;
   'en-US': string;
 }
 
+/**
+ * Is the value a LocalizedString?
+ * @param value - The value to check
+ * @returns true if the value is a LocalizedString, false otherwise
+ */
 function isLocalizedString(value: unknown): value is LocalizedString {
   if (typeof value !== 'object' || value === null) {
     return false;
@@ -35,7 +43,8 @@ function isLocalizedString(value: unknown): value is LocalizedString {
 }
 
 // eslint-disable-next-line max-lines-per-function
-export default function ProductList({ categoryId }: ProductListProps): JSX.Element {
+export default function ProductList({ categoryId, customProducts, searchQuery }: ProductListProps): JSX.Element {
+  // ==================== Init clients and states ====================
   const { customerClient } = useCustomerClient();
   const [filterParams, setFilterParams] = useState<Record<string, unknown>>({});
   const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -45,6 +54,8 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
   const [allLoadedProducts, setAllLoadedProducts] = useState<ProductProjection[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductProjection[]>([]);
   const [isUsingLocalFilter, setIsUsingLocalFilter] = useState(false);
+
+  // Load saved sorting
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     if (typeof window !== 'undefined') {
       const savedSort = localStorage.getItem('productSort');
@@ -52,7 +63,43 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
     }
     return 'default';
   });
+  // ==================== Products data fetching ====================
+  const allProductsResult = useProducts(filterParams);
+  const categoryProductsResult = useProductsByCategory(categoryId, filterParams);
 
+  const usingCustomProducts = Boolean(customProducts && customProducts.length > 0);
+  const usingCategoryProducts = Boolean(categoryId && !usingCustomProducts);
+
+  const { error: errorAll, isLoading: isLoadingAll, products: productsAll } = allProductsResult;
+  const { error: errorCategory, isLoading: isLoadingCategory, products: productsCategory } = categoryProductsResult;
+
+  const [products, error, isLoading] = useMemo(() => {
+    if (usingCustomProducts) {
+      return [customProducts || [], null, false];
+    }
+    if (usingCategoryProducts) {
+      return [productsCategory || [], errorCategory, isLoadingCategory];
+    }
+    return [productsAll || [], errorAll, isLoadingAll];
+  }, [
+    usingCustomProducts,
+    customProducts,
+    usingCategoryProducts,
+    productsCategory,
+    errorCategory,
+    isLoadingCategory,
+    productsAll,
+    errorAll,
+    isLoadingAll,
+  ]);
+
+  const displayProducts = useMemo(
+    () => (isUsingLocalFilter ? filteredProducts : products || []),
+    [isUsingLocalFilter, filteredProducts, products],
+  );
+
+  // ==================== Filter init ====================
+  // base filter groups
   useEffect(
     () =>
       setFilterGroups([
@@ -93,10 +140,13 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
     }
   }, [customerClient]);
 
-  const allProducts = useProducts(filterParams);
-  const categoryProducts = useProductsByCategory(categoryId, filterParams);
-  const { error, isLoading, products } = categoryId ? categoryProducts : allProducts;
-
+  // ==================== Filter results ====================
+  /**
+   * apply filters to products
+   * @param newFilters - The new filter state
+   * @returns void
+   * @description This function updates the filters state, sets persistent filters, and applies the filters to the products.
+   */
   const handleFilterChange = useCallback(
     (newFilters: FilterState): void => {
       console.log('handleFilterChange called with:', newFilters);
@@ -107,7 +157,7 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
       if (filterTimeoutRef.current) {
         clearTimeout(filterTimeoutRef.current);
       }
-
+      // set new timeout for debounce
       filterTimeoutRef.current = setTimeout(() => {
         const authorFilter = newFilters.author;
         const hasAuthorFilter = authorFilter !== undefined && Array.isArray(authorFilter) && authorFilter.length > 0;
@@ -189,7 +239,8 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
     },
     [allLoadedProducts, filterParams.sortBy, filterGroups],
   );
-
+  // ==================== data refresh effects ====================
+  // refresh products when filterParams change
   useEffect(() => {
     if (products && products.length > 0) {
       setAllLoadedProducts(products);
@@ -329,7 +380,7 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
       return val1 === val2;
     });
   }
-
+  // ==================== events ====================
   // sorting
   const handleSortChange = useCallback((newSortOption: SortOption): void => {
     console.log('Sorting changed to:', newSortOption);
@@ -344,22 +395,40 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
       sortBy: newSortOption,
     }));
   }, []);
-
+  // add to cart
   const handleAddToCart = (): void => {
     // TBA
   };
-
+  // format price
   const formatPrice = (price: number, currencyCode = 'USD'): string =>
     new Intl.NumberFormat('en-US', {
       currency: currencyCode,
       style: 'currency',
     }).format(price / 100);
-
+  // ==================== rendering ====================
+  // loading state
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="col-span-1 md:col-span-4 flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">{categoryId ? 'Category Products' : 'All Products'}</h2>
+          <div>
+            <h2 className="text-2xl font-bold">
+              {((): string => {
+                if (searchQuery) {
+                  return `No results for "${searchQuery}"`;
+                }
+                if (categoryId) {
+                  return 'Category Products';
+                }
+                return 'All Products';
+              })()}
+            </h2>
+            {searchQuery && (
+              <p className="text-muted-foreground mb-2">
+                Found {displayProducts.length} {displayProducts.length === 1 ? 'product' : 'products'}
+              </p>
+            )}
+          </div>
           <ProductSort onSortChange={handleSortChange} selectedSort={sortOption} />
         </div>
         <ProductFilters className="sticky top-24" filterGroups={filterGroups} onFilterChange={handleFilterChange} />
@@ -390,12 +459,22 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
       </div>
     );
   }
-
-  if (error || !products || products.length === 0) {
+  // error state
+  if ((searchQuery && customProducts && customProducts.length === 0) || error || !products || products.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="col-span-1 md:col-span-4 flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">{categoryId ? 'Category Products' : 'All Products'}</h2>
+          <div>
+            {((): string => {
+              if (searchQuery) {
+                return `No results for "${searchQuery}"`;
+              }
+              if (categoryId) {
+                return 'Category Products';
+              }
+              return 'All Products';
+            })()}
+          </div>
           <ProductSort onSortChange={handleSortChange} selectedSort={sortOption} />
         </div>
         <div className="hidden md:block">
@@ -405,24 +484,25 @@ export default function ProductList({ categoryId }: ProductListProps): JSX.Eleme
         <div className="col-span-1 md:col-span-3 flex flex-col items-center justify-center p-8 text-center">
           <h3 className="text-2xl font-bold mb-4">No products found</h3>
           <p className="text-muted-foreground mb-6">
-            {error instanceof Error
-              ? `Error loading products: ${error.message}`
-              : "We couldn't find any products with the selected filters."}
+            {error instanceof Error && `Error loading products: ${error.message}`}
+            {!(error instanceof Error) && searchQuery && `We couldn't find any products matching "${searchQuery}".`}
+            {!(error instanceof Error) && !searchQuery && "We couldn't find any products with the selected filters."}
           </p>
           <Button asChild>
-            <Link href="/categories">Browse all categories</Link>
+            <Link href="/products">Browse all products</Link>
           </Button>
         </div>
       </div>
     );
   }
 
-  const displayProducts = isUsingLocalFilter ? filteredProducts : products;
-
+  // normal loading
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <div className="col-span-1 md:col-span-4 flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">{categoryId ? 'Category Products' : 'All Products'}</h2>
+        <div>
+          <h2 className="text-2xl font-bold">{categoryId ? 'Category Products' : 'All Products'}</h2>
+        </div>
         <ProductSort onSortChange={handleSortChange} selectedSort={sortOption} />
       </div>
       <ProductFilters className="sticky top-24" filterGroups={filterGroups} onFilterChange={handleFilterChange} />
