@@ -265,10 +265,10 @@ export default function PersonalInfoForm(props: propsType): JSX.Element | null {
         </DialogHeader>
         <form className="grid gap-4 py-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right" htmlFor="email">
+            <Label className="col-span-4" htmlFor="email">
               E-mail
             </Label>
-            <div className="col-span-3">
+            <div className="col-span-4">
               <Input id="email" name="email" onChange={handleEmailChange} value={email} />
               {emailError && props.customerData?.email !== email && (
                 <p className="text-sm text-red-600">{emailError}</p>
@@ -276,10 +276,10 @@ export default function PersonalInfoForm(props: propsType): JSX.Element | null {
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right" htmlFor="name">
+            <Label className="col-span-4" htmlFor="name">
               Name
             </Label>
-            <div className="col-span-3">
+            <div className="col-span-4">
               <Input
                 defaultValue={props.customerData?.firstName}
                 id="name"
@@ -292,10 +292,10 @@ export default function PersonalInfoForm(props: propsType): JSX.Element | null {
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right" htmlFor="last-name">
+            <Label className="col-span-4" htmlFor="last-name">
               Last name
             </Label>
-            <div className="col-span-3">
+            <div className="col-span-4">
               <Input
                 className="col-span-3"
                 defaultValue={props.customerData?.lastName}
@@ -309,10 +309,10 @@ export default function PersonalInfoForm(props: propsType): JSX.Element | null {
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="col-span-1 text-right" htmlFor="date-of-birth">
+            <Label className="col-span-4" htmlFor="date-of-birth">
               Date of birth
             </Label>
-            <div className="col-span-3">
+            <div className="col-span-4">
               <Input
                 className="col-span-3"
                 defaultValue={props.customerData?.dateOfBirth}
