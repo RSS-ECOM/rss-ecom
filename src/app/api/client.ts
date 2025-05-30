@@ -167,6 +167,28 @@ export default class CustomerClient {
     }
   }
 
+  public async changePassword(currentPassword: string, newPassword: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .password()
+          .post({
+            body: {
+              currentPassword,
+              newPassword,
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
   public async getCustomerInfo(): Promise<Customer | null> {
     try {
       if (this.customerRoot) {
@@ -590,6 +612,31 @@ export default class CustomerClient {
       this.customerClient = createRefreshCustomerClient(token);
       this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
     }
+  }
+
+  public async updatePersonalInfo(personalInfo: { [key: string]: string }): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [
+                { action: 'setFirstName', firstName: personalInfo.firstName },
+                { action: 'setLastName', lastName: personalInfo.lastName },
+                { action: 'changeEmail', email: personalInfo.email },
+                { action: 'setDateOfBirth', dateOfBirth: personalInfo.dateOfBirth },
+              ],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
   }
 }
 
