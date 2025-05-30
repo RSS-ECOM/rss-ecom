@@ -47,8 +47,6 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
     return <div>Product not found</div>;
   }
 
-  console.log(product);
-
   return (
     <Dialog>
       <div className="container mx-auto pt-6 flex pb-10">

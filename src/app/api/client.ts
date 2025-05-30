@@ -9,6 +9,7 @@ import {
   type CustomerSignInResult,
   type ProductProjection,
   type ProductProjectionPagedQueryResponse,
+  type QueryParam,
   createApiBuilderFromCtpClient,
 } from '@commercetools/platform-sdk';
 import Cookies from 'js-cookie';
@@ -23,6 +24,21 @@ interface JwtPayload {
 interface ApiResponse {
   [key: string]: unknown;
 }
+
+type CommerceToolsQueryArgs = {
+  [key: string]: QueryParam;
+  filter?: string | string[];
+  fuzzy?: boolean;
+  fuzzyLevel?: number;
+  limit?: number;
+  markMatchingVariants?: boolean;
+  offset?: number;
+  priceCountry?: string;
+  priceCurrency?: string;
+  priceCustomerGroup?: string;
+  sort?: string | string[];
+  staged?: boolean;
+};
 
 // interface MyTokenCache {
 //   cachedToken: {
@@ -238,34 +254,166 @@ export default class CustomerClient {
     return null;
   }
 
-  public async getProducts(): Promise<ProductProjectionPagedQueryResponse | null> {
-    console.log('Getting products... customerRoot available:', !!this.customerRoot);
+  public async getProducts(
+    filterParams: Record<string, unknown> = {},
+  ): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log('Getting products with filters:', filterParams);
 
     if (this.customerRoot) {
       try {
-        const response = await this.customerRoot.productProjections().get().execute();
+        const filterQuery: string[] = [];
+
+        filterQuery.push('published:true');
+
+        if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
+          const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
+          const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
+
+          console.log(`Price filter values: min=${minPrice}, max=${maxPrice}`);
+
+          if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+            console.log(`Added price range filter: variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+          } else if (minPrice > 0) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to *)`);
+          } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(* to ${maxPrice})`);
+          }
+        }
+
+        if (
+          filterParams.categoryIds &&
+          Array.isArray(filterParams.categoryIds) &&
+          filterParams.categoryIds.length > 0
+        ) {
+          if (filterParams.categoryIds.length === 1) {
+            filterQuery.push(`categories.id:"${filterParams.categoryIds[0]}"`);
+          } else {
+            filterParams.categoryIds.forEach((categoryId) => {
+              filterQuery.push(`categories.id:"${categoryId}"`);
+            });
+          }
+        }
+
+        console.log('Filter query:', filterQuery);
+
+        let sort: string[] = [];
+        if (filterParams.sortBy) {
+          switch (filterParams.sortBy) {
+            case 'price-asc':
+              sort = ['price asc'];
+              break;
+            case 'price-desc':
+              sort = ['price desc'];
+              break;
+            case 'name-asc':
+              sort = ['name.en-US asc'];
+              break;
+            case 'name-desc':
+              sort = ['name.en-US desc'];
+              break;
+            default:
+              break;
+          }
+        }
+
+        console.log('Sorting parameters:', sort);
+
+        const response = await this.customerRoot
+          .productProjections()
+          .search()
+          .get({
+            queryArgs: {
+              filter: filterQuery,
+              limit: 100,
+              sort: sort.length > 0 ? sort : undefined,
+            },
+          })
+          .execute();
+
         console.log('Products response:', response.statusCode, 'Total items:', response.body?.total);
         return response.body;
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching products with filters:', error);
         return null;
       }
     }
-    console.warn('No customerRoot available to fetch products');
     return null;
   }
 
-  public async getProductsByCategory(categoryId: string): Promise<ProductProjectionPagedQueryResponse | null> {
-    console.log(`Getting products for category ${categoryId}...`);
+  public async getProductsByCategory(
+    categoryId: string,
+    filterParams: Record<string, unknown> = {},
+  ): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log(`Getting products for category ${categoryId} with filters:`, filterParams);
 
     if (this.customerRoot) {
       try {
+        const filterQuery: string[] = [];
+
+        filterQuery.push(`categories.id:"${categoryId}"`);
+        filterQuery.push('published:true');
+
+        if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
+          const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
+          const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
+
+          console.log(`Price filter values: min=${minPrice}, max=${maxPrice}`);
+
+          if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+            console.log(`Added price range filter: variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+          } else if (minPrice > 0) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to *)`);
+          } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(* to ${maxPrice})`);
+          }
+        }
+
+        if (
+          filterParams.categoryIds &&
+          Array.isArray(filterParams.categoryIds) &&
+          filterParams.categoryIds.length > 0
+        ) {
+          if (filterParams.categoryIds.length === 1) {
+            filterQuery.push(`categories.id:"${filterParams.categoryIds[0]}"`);
+          } else {
+            filterParams.categoryIds.forEach((categoryId) => {
+              filterQuery.push(`categories.id:"${categoryId}"`);
+            });
+          }
+        }
+
+        console.log('Filter query for category:', filterQuery);
+
+        let sort: string[] = [];
+        if (filterParams.sortBy) {
+          switch (filterParams.sortBy) {
+            case 'price-asc':
+              sort = ['price asc'];
+              break;
+            case 'price-desc':
+              sort = ['price desc'];
+              break;
+            case 'name-asc':
+              sort = ['name.en-US asc'];
+              break;
+            case 'name-desc':
+              sort = ['name.en-US desc'];
+              break;
+            default:
+              break;
+          }
+        }
+
         const response = await this.customerRoot
           .productProjections()
+          .search()
           .get({
             queryArgs: {
+              filter: filterQuery,
               limit: 100,
-              where: [`categories(id="${categoryId}")`, 'published=true'],
+              sort: sort.length > 0 ? sort : undefined,
             },
           })
           .execute();
@@ -360,6 +508,100 @@ export default class CustomerClient {
     });
     if (isCustomer(response.body)) {
       return response.body;
+    }
+    return null;
+  }
+
+  public async searchProducts(
+    searchQuery: string,
+    filterParams: Record<string, unknown> = {},
+  ): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log(`Searching products with query "${searchQuery}" and filters:`, filterParams);
+
+    if (this.customerRoot) {
+      try {
+        const filterQuery: string[] = ['published:true'];
+
+        if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
+          const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
+          const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
+
+          if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+          } else if (minPrice > 0) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to *)`);
+          } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(* to ${maxPrice})`);
+          }
+        }
+
+        if (filterParams.categoryIds && Array.isArray(filterParams.categoryIds)) {
+          if (filterParams.categoryIds.length === 1) {
+            filterQuery.push(`categories.id:"${filterParams.categoryIds[0]}"`);
+          } else {
+            filterParams.categoryIds.forEach((categoryId) => {
+              filterQuery.push(`categories.id:"${categoryId}"`);
+            });
+          }
+        }
+
+        console.log('Search filter query:', filterQuery);
+
+        let sort: string[] = [];
+        if (filterParams.sortBy) {
+          switch (filterParams.sortBy) {
+            case 'price-asc':
+              sort = ['price asc'];
+              break;
+            case 'price-desc':
+              sort = ['price desc'];
+              break;
+            case 'name-asc':
+              sort = ['name.en-US asc'];
+              break;
+            case 'name-desc':
+              sort = ['name.en-US desc'];
+              break;
+            default:
+              break;
+          }
+        }
+
+        const queryArgs: CommerceToolsQueryArgs = {
+          filter: filterQuery,
+          limit: 100,
+          sort: sort.length > 0 ? sort : undefined,
+        };
+
+        if (searchQuery.length <= 2) {
+          queryArgs['text.en-US'] = `${searchQuery}*`;
+        } else if (searchQuery.length <= 4) {
+          queryArgs['text.en-US'] = searchQuery;
+          queryArgs.fuzzy = true;
+          queryArgs.fuzzyLevel = 1;
+          if (searchQuery.length >= 3) {
+            queryArgs['text.en-US.exact'] = `${searchQuery}*`;
+          }
+        } else {
+          queryArgs['text.en-US'] = searchQuery;
+          queryArgs.fuzzy = true;
+          queryArgs.fuzzyLevel = 2;
+        }
+
+        console.log('Full search query parameters:', queryArgs);
+
+        const response = await this.customerRoot.productProjections().search().get({ queryArgs }).execute();
+
+        console.log('Search results:', {
+          foundBooks: response.body?.results?.map((p) => p.name['en-US']),
+          status: response.statusCode,
+          total: response.body?.total,
+        });
+        return response.body;
+      } catch (error) {
+        console.error(`Error searching products with query "${searchQuery}":`, error);
+        return null;
+      }
     }
     return null;
   }
