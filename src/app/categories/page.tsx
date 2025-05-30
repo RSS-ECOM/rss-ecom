@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-// Обновленные данные о категориях с учетом externalId
 const categories = [
   {
     description: 'Fiction books',
