@@ -55,6 +55,28 @@ export function useCustomer() {
     },
   });
 
+  const reLoginMutation = useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      const customer = await customerClient.login(email, password);
+
+      if (myTokenCache.refreshToken) {
+        await setLogin(myTokenCache.refreshToken);
+      }
+
+      return customer;
+    },
+    onSuccess: () => {
+      login();
+    },
+    onError: (error) => {
+      toast({
+        description: error instanceof Error ? error.message : 'Failed to log in',
+        title: 'Login error',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const registerMutation = useMutation({
     mutationFn: async (customerParams: any) => {
       const result = await customerClient.register(customerParams);
@@ -105,6 +127,7 @@ export function useCustomer() {
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout: logoutMutation.mutate,
+    reLogin: reLoginMutation.mutate,
     isLoginLoading: loginMutation.isPending,
     isRegisterLoading: registerMutation.isPending,
     isLogoutLoading: logoutMutation.isPending,
