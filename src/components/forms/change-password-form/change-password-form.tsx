@@ -89,7 +89,7 @@ export default function ChangePasswordForm(props: propsType): JSX.Element | null
 
   const [isPasswordEqual, setIsPasswordEqual] = useState(true);
   const [newPasswordError, setNewPasswordError] = useState('');
-  const { login } = useCustomer();
+  const { reLogin } = useCustomer();
 
   const handleOpenChange = (open: boolean): void => {
     props.setModalOpen(open);
@@ -109,6 +109,7 @@ export default function ChangePasswordForm(props: propsType): JSX.Element | null
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
     const formValues = getValuesFromForm(e);
     validateNewPassword(formValues.newPassword);
     if (formValues.newPassword !== formValues.confirmNewPassword) {
@@ -122,8 +123,14 @@ export default function ChangePasswordForm(props: propsType): JSX.Element | null
         const email = props.customerData?.email;
         await customerClient.changePassword(formValues.currentPassword, formValues.newPassword);
         if (email) {
-          login({ email, password: formValues.newPassword });
+          reLogin({ email, password: formValues.newPassword });
         }
+        toast({
+          description: 'Password changed',
+          title: 'Success!',
+          variant: 'default',
+        });
+        handleOpenChange(false);
       } catch (error) {
         if (isError(error)) {
           toast({
