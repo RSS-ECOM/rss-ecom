@@ -1,5 +1,4 @@
-import type { Customer } from '@commercetools/platform-sdk';
-import type { ErrorResponse } from '@commercetools/platform-sdk';
+import type { Customer, ErrorResponse } from '@commercetools/platform-sdk';
 
 import { Button } from '@/components/ui/button';
 import {
