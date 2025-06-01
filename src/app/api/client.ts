@@ -533,6 +533,26 @@ export default class CustomerClient {
     return null;
   }
 
+  public async removeAddress(addressId: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'removeAddress', addressId }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
   public async searchProducts(
     searchQuery: string,
     filterParams: Record<string, unknown> = {},

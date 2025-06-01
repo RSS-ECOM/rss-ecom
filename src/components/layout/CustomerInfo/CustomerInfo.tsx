@@ -8,7 +8,7 @@ import PersonalInfoForm from '@/components/forms/personal-info-form/personal-inf
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCustomerClient } from '@/lib/customer-client';
-import { Edit, Plus } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const countrySwitch = (country: string): string => {
@@ -32,6 +32,11 @@ export default function CustomerInfo(): JSX.Element {
   const { customerClient } = useCustomerClient();
   const [customerData, setCustomerData] = useState<Customer | null>(null);
   const [defaultShippingAddress, setDefaultShippingAddress] = useState<Address | undefined>(undefined);
+
+  const handleDeleteClick = async (addressId: string): Promise<void> => {
+    const updatedCustomer = await customerClient.removeAddress(addressId);
+    setCustomerData(updatedCustomer);
+  };
 
   useEffect(() => {
     if (customerClient) {
@@ -90,6 +95,12 @@ export default function CustomerInfo(): JSX.Element {
 
   const displayAddress = (address: Address, isEqual: boolean): JSX.Element => (
     <Card className="group/editAddress relative w-full mb-8" key={address.id}>
+      <button
+        className="opacity-0 group-hover/editAddress:opacity-100 transition-opacity absolute top-2 right-10"
+        onClick={() => handleDeleteClick(address.id ? address.id : '')}
+      >
+        <Trash2 className="h-5 w-5"></Trash2>
+      </button>
       <button
         className="opacity-0 group-hover/editAddress:opacity-100 transition-opacity absolute top-2 right-2"
         onClick={() => handleEditAddressClick(address.id ? address.id : '')}
