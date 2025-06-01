@@ -202,15 +202,19 @@ export default function ProductCard({ formatPrice, product }: ProductCardProps):
         <CardFooter className={`p-4 pt-0 mt-auto transition-colors duration-300 ${isHovered ? 'bg-secondary/20' : ''}`}>
           <div className="grid grid-cols-2 gap-2 w-full">
             <Button
-              asChild
               className={`font-medium transition-all duration-300 ${
                 isHovered
                   ? 'bg-amber-800/20 hover:bg-amber-400/30 text-foreground border-amber-500'
                   : 'border-amber-500/70 hover:bg-amber-500/30 hover:border-amber-500'
               }`}
+              //         onClick={(e) => {
+              //   e.preventDefault();
+              //   e.stopPropagation();
+              //   // window.location.href = `/products/${product.id}`;
+              // }}
               variant="outline"
             >
-              <Link href={`/products/${product.id}`}>Details</Link>
+              Details {/* <Link href={`/products/${product.id}`}>Details</Link> */}
             </Button>
             <Button
               className={`font-medium transition-transform duration-300 ${

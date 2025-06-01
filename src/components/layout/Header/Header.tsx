@@ -110,8 +110,8 @@ export default function Header(): JSX.Element {
 
             <Button
               aria-label="Submit search"
-              className={`absolute right-0 h-full px-3 
-                   ${searchQuery.trim().length < 5 ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}
+              className={`absolute right-0 h-full px-3
+                ${searchQuery.trim().length < 5 ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}
               size="sm"
               type="submit"
               variant="ghost"
@@ -121,13 +121,13 @@ export default function Header(): JSX.Element {
             </Button>
 
             {isInvalid && (
-              <div className="absolute -bottom-12 left-0 text-xs text-red-500 bg-background/90 p-1 rounded-md">
+              <div className="absolute -bottom-[80px] left-0 text-xs text-red-500 bg-black/20 p-1 rounded-md">
                 Please enter at least 5 characters for better search results
               </div>
             )}
 
             {isFocused && searchQuery.trim().length < 5 && !isInvalid && (
-              <div className="absolute -bottom-11 left-0 text-xs text-muted-foreground bg-background/90 p-1 rounded-md">
+              <div className="absolute -bottom-12 left-0 text-xs text-muted-foreground bg-black/20 p-1 rounded-md">
                 Type at least 5 characters for accurate search
               </div>
             )}

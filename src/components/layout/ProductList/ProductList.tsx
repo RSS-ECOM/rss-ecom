@@ -21,7 +21,12 @@ import ProductSort, { type SortOption, isSortOption } from './ProductSort';
 type ProductListProps = {
   categoryId?: string;
   customProducts?: ProductProjection[];
+  onCategoryChange?: (categories: string[]) => void;
+  onFilterChange?: (params: Record<string, unknown>) => void;
+  onSortChange?: (option: SortOption) => void;
   searchQuery?: null | string;
+  selectedCategories?: string[];
+  sortOption?: SortOption;
 };
 
 interface LocalizedString {
@@ -43,20 +48,35 @@ function isLocalizedString(value: unknown): value is LocalizedString {
 }
 
 // eslint-disable-next-line max-lines-per-function
-export default function ProductList({ categoryId, customProducts, searchQuery }: ProductListProps): JSX.Element {
+export default function ProductList({
+  categoryId,
+  customProducts,
+  onCategoryChange,
+  onFilterChange,
+  onSortChange,
+  searchQuery,
+  selectedCategories = [],
+  sortOption: externalSortOption,
+}: ProductListProps): JSX.Element {
   // ==================== Init clients and states ====================
   const { customerClient } = useCustomerClient();
   const [filterParams, setFilterParams] = useState<Record<string, unknown>>({});
-  const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const [filters, setFilters] = useState<FilterState>({});
   const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([]);
   const [persistentFilters, setPersistentFilters] = useState<FilterState>({});
   const [allLoadedProducts, setAllLoadedProducts] = useState<ProductProjection[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductProjection[]>([]);
   const [isUsingLocalFilter, setIsUsingLocalFilter] = useState(false);
+  const clearingFiltersRef = useRef<boolean>(false);
+  const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load saved sorting
   const [sortOption, setSortOption] = useState<SortOption>(() => {
+    if (externalSortOption) {
+      return externalSortOption;
+    }
+
     if (typeof window !== 'undefined') {
       const savedSort = localStorage.getItem('productSort');
       return savedSort && isSortOption(savedSort) ? savedSort : 'default';
@@ -148,18 +168,100 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
    * @description This function updates the filters state, sets persistent filters, and applies the filters to the products.
    */
   const handleFilterChange = useCallback(
-    (newFilters: FilterState): void => {
-      console.log('handleFilterChange called with:', newFilters);
+    (newFiltersFromUI: FilterState): void => {
+      console.log('ProductList: handleFilterChange received:', { currentInternalFilters: filters, newFiltersFromUI });
+      const isReset = Object.keys(newFiltersFromUI).length === 0;
 
-      setFilters(newFilters);
-      setPersistentFilters(newFilters);
+      if (isReset) {
+        if (Object.keys(filters).length > 0 || Object.keys(persistentFilters).length > 0) {
+          console.log('ProductList: Resetting internal filters.');
+          setFilters({});
+          setPersistentFilters({});
+          setFilterParams((prevParams) => ({ sortBy: prevParams.sortBy }));
+          setIsUsingLocalFilter(false);
+        } else {
+          console.log('ProductList: Internal filters already empty.');
+        }
+        if (onFilterChange) {
+          onFilterChange({});
+        }
+        return;
+      }
+
+      const internalFiltersChanged = !compareFilterObjects(newFiltersFromUI, filters);
+
+      if (internalFiltersChanged) {
+        console.log('ProductList: Setting new internal filters:', newFiltersFromUI);
+        setFilters(newFiltersFromUI);
+        setPersistentFilters(newFiltersFromUI);
+      } else {
+        console.log('ProductList: Internal filters appear unchanged.');
+      }
+
+      if (onFilterChange) {
+        onFilterChange(newFiltersFromUI);
+      }
+
+      const areFiltersEqual = (a: FilterState, b: FilterState): boolean => {
+        if (Object.keys(a).length !== Object.keys(b).length) {
+          return false;
+        }
+
+        return Object.keys(a).every((key) => {
+          const aVal = a[key];
+          const bVal = b[key];
+
+          if (Array.isArray(aVal) && Array.isArray(bVal)) {
+            if (aVal.length !== bVal.length) {
+              return false;
+            }
+            return aVal.every((val, idx) => val === bVal[idx]);
+          }
+
+          return aVal === bVal;
+        });
+      };
+
+      if (areFiltersEqual(newFiltersFromUI, filters)) {
+        console.log('Filters unchanged, skipping processing');
+        return;
+      }
+
+      if (Object.keys(newFiltersFromUI).length === 0) {
+        if (Object.keys(filters).length === 0) {
+          console.log('Filters already empty, skipping update');
+          return;
+        }
+
+        console.log('Resetting all filters');
+        setFilters({});
+        setPersistentFilters({});
+
+        clearingFiltersRef.current = true;
+
+        setTimeout(() => {
+          clearingFiltersRef.current = false;
+        }, 100);
+
+        if (onFilterChange) {
+          onFilterChange({});
+        }
+
+        return;
+      }
+      console.log('Setting new filters:', newFiltersFromUI);
+      setFilters(newFiltersFromUI);
+      setPersistentFilters(newFiltersFromUI);
+
+      if (onFilterChange) {
+        onFilterChange(newFiltersFromUI);
+      }
 
       if (filterTimeoutRef.current) {
         clearTimeout(filterTimeoutRef.current);
       }
-      // set new timeout for debounce
       filterTimeoutRef.current = setTimeout(() => {
-        const authorFilter = newFilters.author;
+        const authorFilter = newFiltersFromUI.author;
         const hasAuthorFilter = authorFilter !== undefined && Array.isArray(authorFilter) && authorFilter.length > 0;
 
         if (hasAuthorFilter && allLoadedProducts.length > 0) {
@@ -167,7 +269,7 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
             sortBy: filterParams.sortBy,
           };
 
-          Object.entries(newFilters).forEach(([key, value]) => {
+          Object.entries(newFiltersFromUI).forEach(([key, value]) => {
             if (key !== 'author') {
               if (key === 'price' && Array.isArray(value)) {
                 if (value.length === 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
@@ -185,7 +287,7 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
           let authorNames: string[] = [];
 
           if (authorGroup?.options) {
-            const authorIds = Array.isArray(newFilters.author) ? newFilters.author : [];
+            const authorIds = Array.isArray(newFiltersFromUI.author) ? newFiltersFromUI.author : [];
             authorNames = authorIds
               .map((authorId) => {
                 const option = authorGroup.options?.find((opt) => opt.id === authorId);
@@ -220,7 +322,7 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
             sortBy: filterParams.sortBy,
           };
 
-          Object.entries(newFilters).forEach(([key, value]) => {
+          Object.entries(newFiltersFromUI).forEach(([key, value]) => {
             if (key === 'price' && Array.isArray(value)) {
               if (value.length === 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
                 apiParams.priceFrom = value[0] * 100;
@@ -237,8 +339,9 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
         }
       }, 500);
     },
-    [allLoadedProducts, filterParams.sortBy, filterGroups],
+    [onFilterChange, allLoadedProducts, filterParams.sortBy, filterGroups, filters, persistentFilters],
   );
+
   // ==================== data refresh effects ====================
   // refresh products when filterParams change
   useEffect(() => {
@@ -310,6 +413,61 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
     }
   }, [products]);
 
+  // categories
+  useEffect(() => {
+    if (!selectedCategories || selectedCategories.length === 0) {
+      return;
+    }
+
+    setFilters((currentFilters) => {
+      const currentCategoryFilters = currentFilters.category || [];
+
+      if (
+        Array.isArray(currentCategoryFilters) &&
+        currentCategoryFilters.every((item) => typeof item === 'string') &&
+        areArraysEqual(currentCategoryFilters, selectedCategories)
+      ) {
+        console.log('Categories unchanged, skipping update');
+        return currentFilters;
+      }
+
+      console.log('Updating filters with selected categories:', selectedCategories);
+
+      return {
+        ...currentFilters,
+        category: selectedCategories,
+      };
+    });
+  }, [selectedCategories]);
+
+  function areArraysEqual<T>(arr1: T[], arr2: T[]): boolean {
+    if (arr1.length !== arr2.length) {
+      return false;
+    }
+    for (let i = 0; i < arr1.length; i += 1) {
+      if (arr1[i] !== arr2[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const handleCategoryChange = useCallback(
+    (categories: string[]): void => {
+      console.log('ProductList category filter changed to:', categories);
+
+      setFilters((currentFilters) => ({
+        ...currentFilters,
+        category: categories.length > 0 ? categories : undefined,
+      }));
+
+      if (onCategoryChange) {
+        onCategoryChange(categories);
+      }
+    },
+    [onCategoryChange],
+  );
+
   // compare and restore filters
   useEffect(() => {
     if (products && products.length > 0) {
@@ -347,12 +505,6 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
           apiParams.sortBy = filterParams.sortBy;
           setFilterParams(apiParams);
         }
-      } else if (Object.keys(filters).length > 0) {
-        console.log('Reset filters because persistentFilters is empty');
-        setFilters({});
-        setFilterParams((prevParams) => ({
-          sortBy: prevParams.sortBy,
-        }));
       }
     }
   }, [products, filters, persistentFilters, filterParams.sortBy]);
@@ -382,19 +534,26 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
   }
   // ==================== events ====================
   // sorting
-  const handleSortChange = useCallback((newSortOption: SortOption): void => {
-    console.log('Sorting changed to:', newSortOption);
-    setSortOption(newSortOption);
+  const handleSortChange = useCallback(
+    (newSortOption: SortOption): void => {
+      console.log('ProductList sorting changed to:', newSortOption);
+      setSortOption(newSortOption);
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('productSort', newSortOption);
-    }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('productSort', newSortOption);
+      }
 
-    setFilterParams((prevParams) => ({
-      ...prevParams,
-      sortBy: newSortOption,
-    }));
-  }, []);
+      setFilterParams((prevParams) => ({
+        ...prevParams,
+        sortBy: newSortOption,
+      }));
+
+      if (onSortChange) {
+        onSortChange(newSortOption);
+      }
+    },
+    [onSortChange],
+  );
 
   // format price
   const formatPrice = (price: number, currencyCode = 'USD'): string =>
@@ -412,23 +571,28 @@ export default function ProductList({ categoryId, customProducts, searchQuery }:
             <h2 className="text-2xl font-bold">
               {((): string => {
                 if (searchQuery) {
-                  return `No results for "${searchQuery}"`;
+                  return `Searching for "${searchQuery}"...`;
                 }
                 if (categoryId) {
-                  return 'Category Products';
+                  return 'Loading Category Products...';
                 }
-                return 'All Products';
+                return 'Loading Products...';
               })()}
             </h2>
             {searchQuery && (
               <p className="text-muted-foreground mb-2">
-                Found {displayProducts.length} {displayProducts.length === 1 ? 'product' : 'products'}
+                {/* Found {displayProducts.length} {displayProducts.length === 1 ? 'product' : 'products'} */}
               </p>
             )}
           </div>
           <ProductSort onSortChange={handleSortChange} selectedSort={sortOption} />
         </div>
-        <ProductFilters className="sticky top-24" filterGroups={filterGroups} onFilterChange={handleFilterChange} />
+        <ProductFilters
+          className="sticky top-24"
+          filterGroups={filterGroups}
+          onCategoryChange={handleCategoryChange}
+          onFilterChange={handleFilterChange}
+        />
 
         <div className="col-span-1 md:col-span-3">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
