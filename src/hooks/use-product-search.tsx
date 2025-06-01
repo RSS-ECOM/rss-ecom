@@ -11,9 +11,15 @@ interface UseProductSearchReturn {
   handleSearch: (query: string) => void;
   handleSortChange: (option: SortOption) => void;
   sortOption: SortOption;
+  selectedCategories: string[];
+  handleCategoryChange: (categories: string[]) => void;
 }
 
-export function useProductSearch(categoryId?: string, initialSearchQuery?: string | null): UseProductSearchReturn {
+export function useProductSearch(
+  categoryId?: string,
+  initialCategories?: string[],
+  initialSearchQuery?: string | null,
+): UseProductSearchReturn {
   const { customerClient } = useCustomerClient();
   const [products, setProducts] = useState<ProductProjection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +28,7 @@ export function useProductSearch(categoryId?: string, initialSearchQuery?: strin
   const [searchQuery, setSearchQuery] = useState<string | null>(
     initialSearchQuery && initialSearchQuery.trim() !== '' ? initialSearchQuery : null,
   );
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories || []);
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     if (typeof window !== 'undefined') {
       const savedSort = localStorage.getItem('productSort');
@@ -38,6 +45,13 @@ export function useProductSearch(categoryId?: string, initialSearchQuery?: strin
   });
 
   useEffect(() => {
+    console.log('Search params changed:', {
+      searchQuery,
+      categoryId,
+      sortOption,
+      filterParams,
+      selectedCategories,
+    });
     if (!customerClient) {
       setIsLoading(false);
       return;
@@ -51,6 +65,7 @@ export function useProductSearch(categoryId?: string, initialSearchQuery?: strin
         const paramsWithSort = {
           ...filterParams,
           sortBy: sortOption !== 'default' ? sortOption : undefined,
+          categoryIds: selectedCategories.length > 0 ? selectedCategories : categoryId ? [categoryId] : undefined,
         };
 
         if (searchQuery) {
@@ -77,10 +92,14 @@ export function useProductSearch(categoryId?: string, initialSearchQuery?: strin
     };
 
     fetchProducts();
-  }, [customerClient, filterParams, categoryId, searchQuery, sortOption]);
+  }, [customerClient, filterParams, categoryId, searchQuery, sortOption, selectedCategories]);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query ? query.trim() : null);
+  }, []);
+
+  const handleCategoryChange = useCallback((categories: string[]) => {
+    setSelectedCategories(categories);
   }, []);
 
   const handleSortChange = useCallback((newSortOption: SortOption): void => {
@@ -105,5 +124,7 @@ export function useProductSearch(categoryId?: string, initialSearchQuery?: strin
     handleSearch,
     handleSortChange,
     sortOption,
+    selectedCategories,
+    handleCategoryChange,
   };
 }
