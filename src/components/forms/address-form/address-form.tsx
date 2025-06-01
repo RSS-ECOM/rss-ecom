@@ -78,9 +78,20 @@ const isValidPostalCode = (
   };
   const postalCodeSchema = z
     .string()
-    .refine((val) => postalCodePatterns[country].pattern.test(val), {
-      message: `Change format to ${postalCodePatterns[country].format}`,
+    .refine(() => postalCodePatterns[country], {
+      message: 'Select country',
     })
+    .refine(
+      (val) => {
+        if (postalCodePatterns[country]) {
+          return postalCodePatterns[country].pattern.test(val);
+        }
+        return true;
+      },
+      {
+        message: postalCodePatterns[country] ? `Change format to ${postalCodePatterns[country].format}` : '',
+      },
+    )
     .refine((val) => val.trim() === val, {
       message: 'Postal code cannot start or end with whitespace',
     });
@@ -125,12 +136,13 @@ export default function AddressForm(props: propsType): JSX.Element | null {
 
   useEffect(() => {
     const check = [cityError, postalCodeError, streetError].some((error) => error);
-    if (check) {
+    const checkIfBlank = [city, postalCode, street, selectedCountry].some((value) => !value);
+    if (check || checkIfBlank) {
       setCanBeSubmitted(false);
     } else {
       setCanBeSubmitted(true);
     }
-  }, [cityError, postalCodeError, streetError]);
+  }, [cityError, postalCodeError, streetError, city, street, selectedCountry, postalCode]);
 
   useEffect(() => {
     const selectedAddress = props.customerData?.addresses.find((address) => address.id === props.addressId);
@@ -154,6 +166,10 @@ export default function AddressForm(props: propsType): JSX.Element | null {
       setCityError('');
       setStreetError('');
       setPostalCodeError('');
+      setCity('');
+      setStreet('');
+      setPostalCode('');
+      setSelectedCountry('');
     }
   };
 
@@ -193,7 +209,8 @@ export default function AddressForm(props: propsType): JSX.Element | null {
     }
   };
 
-  const handleSubmit = async (): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
     try {
       const address = {
         city,
@@ -201,17 +218,13 @@ export default function AddressForm(props: propsType): JSX.Element | null {
         postalCode,
         streetName: street,
       };
-      await customerClient.updateAddress(address, props.addressId ? props.addressId : '');
-      props.setCustomerData((prev) =>
-        prev
-          ? {
-              ...prev,
-              addresses: prev.addresses.map((addr) => (addr.id === props.addressId ? { ...addr, ...address } : addr)),
-            }
-          : null,
-      );
+      if (props.addressId) {
+        props.setCustomerData(await customerClient.updateAddress(address, props.addressId));
+      } else {
+        props.setCustomerData(await customerClient.addAddress(address));
+      }
       toast({
-        description: 'Address updated!',
+        description: props.addressId ? 'Address updated!' : 'Address added!',
         title: 'Success',
       });
     } catch (error) {
@@ -228,8 +241,10 @@ export default function AddressForm(props: propsType): JSX.Element | null {
     <Dialog onOpenChange={handleOpenChange} open={props.modalOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Address</DialogTitle>
-          <DialogDescription>You can edit address here</DialogDescription>
+          <DialogTitle>{props.addressId ? 'Edit Address' : 'Add Address'}</DialogTitle>
+          <DialogDescription>
+            {props.addressId ? 'You can edit address here' : 'You can add address here'}
+          </DialogDescription>
         </DialogHeader>
         <form className="grid gap-4 py-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -294,7 +309,7 @@ export default function AddressForm(props: propsType): JSX.Element | null {
 
           <DialogFooter>
             <Button disabled={!canBeSubmitted} type="submit">
-              Save changes
+              {props.addressId ? 'Save changes' : 'Add address'}
             </Button>
           </DialogFooter>
         </form>

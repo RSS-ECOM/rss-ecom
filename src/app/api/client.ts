@@ -117,6 +117,26 @@ export default class CustomerClient {
     }
   }
 
+  public async addAddress(address: _BaseAddress): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'addAddress', address }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
   public async callApi<T>(path: string, options: RequestInit = {}): Promise<T | null> {
     const url = `${this.apiUrl}${path}`;
 

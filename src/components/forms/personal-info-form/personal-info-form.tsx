@@ -238,6 +238,7 @@ export default function PersonalInfoForm(props: propsType): JSX.Element | null {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
     const formValues = getValuesFromForm(e);
     try {
       await customerClient.updatePersonalInfo(formValues);

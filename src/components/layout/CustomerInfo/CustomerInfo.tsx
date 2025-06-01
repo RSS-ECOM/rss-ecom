@@ -8,7 +8,7 @@ import PersonalInfoForm from '@/components/forms/personal-info-form/personal-inf
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCustomerClient } from '@/lib/customer-client';
-import { Edit } from 'lucide-react';
+import { Edit, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const countrySwitch = (country: string): string => {
@@ -54,6 +54,7 @@ export default function CustomerInfo(): JSX.Element {
   const [modalOpen, setModalOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [addAddressModalOpen, setAddAddressModalOpen] = useState(false);
   const [addressId, setAddressId] = useState('');
 
   const getAddressTitle = (customerData: Customer | null, id: string | undefined): string => {
@@ -83,10 +84,14 @@ export default function CustomerInfo(): JSX.Element {
     setAddressModalOpen(true);
   };
 
+  const handleAddAddressClick = (): void => {
+    setAddAddressModalOpen(true);
+  };
+
   const displayAddress = (address: Address, isEqual: boolean): JSX.Element => (
-    <Card className="group relative w-full mb-8" key={address.id}>
+    <Card className="group/editAddress relative w-full mb-8" key={address.id}>
       <button
-        className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2"
+        className="opacity-0 group-hover/editAddress:opacity-100 transition-opacity absolute top-2 right-2"
         onClick={() => handleEditAddressClick(address.id ? address.id : '')}
       >
         <Edit className="h-5 w-5"></Edit>
@@ -142,11 +147,17 @@ export default function CustomerInfo(): JSX.Element {
           </div>
         </CardContent>
       </Card>
-      <Card className="w-full max-w-xl">
+      <Card className="group/addAddress relative w-full max-w-xl">
         <CardHeader>
           <CardTitle>Addresses</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <button
+            className="opacity-0 group-hover/addAddress:opacity-100 transition-opacity absolute top-2 right-2"
+            onClick={handleAddAddressClick}
+          >
+            <Plus className="h-5 w-5"></Plus>
+          </button>
           <div className="flex flex-col">
             {customerData ? (
               <div>
@@ -180,6 +191,12 @@ export default function CustomerInfo(): JSX.Element {
         modalOpen={addressModalOpen}
         setCustomerData={setCustomerData}
         setModalOpen={setAddressModalOpen}
+      ></AddressForm>
+      <AddressForm
+        customerData={customerData}
+        modalOpen={addAddressModalOpen}
+        setCustomerData={setCustomerData}
+        setModalOpen={setAddAddressModalOpen}
       ></AddressForm>
     </div>
   );
