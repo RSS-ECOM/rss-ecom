@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { CalendarIcon, Eye, EyeOff } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -62,10 +62,18 @@ function validatePostalCode(postalCode: string, country: string): { format: stri
   };
 }
 
-export const PasswordInput = <TFieldValues extends Record<string, unknown> = Record<string, unknown>>({
-  field,
-  placeholder = 'password',
-}: PasswordInputProps<TFieldValues>): JSX.Element => {
+export const PasswordInput = forwardRef<
+  HTMLInputElement,
+  {
+    field: {
+      name: string;
+      onBlur: () => void;
+      onChange: (value: string) => void;
+      value: string;
+    };
+    placeholder?: string;
+  }
+>(({ field, placeholder = 'password' }, ref) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const safeField = {
@@ -122,6 +130,7 @@ export const PasswordInput = <TFieldValues extends Record<string, unknown> = Rec
             e.target.classList.remove('bg-red-50/30');
           }
         }}
+        ref={ref}
       />
       <button
         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10 flex items-center justify-center"
@@ -138,7 +147,9 @@ export const PasswordInput = <TFieldValues extends Record<string, unknown> = Rec
       {errorMessage && <p className="text-xs font-medium text-red-500 mt-1">{errorMessage}</p>}
     </div>
   );
-};
+});
+
+PasswordInput.displayName = 'PasswordInput';
 
 const FormSchemaBase = z.object({
   billCity: z
@@ -308,47 +319,6 @@ export default function RegistrationForm(): JSX.Element {
     },
     resolver: zodResolver(FormSchema),
   });
-
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'email' || !name) {
-        const email = value.email?.toString() || '';
-        if (/\s/.test(email)) {
-          form.setError('email', {
-            message: 'Email address contains whitespace. Please remove all spaces.',
-            type: 'manual',
-          });
-        } else if (form.formState.errors.email?.type === 'manual') {
-          form.clearErrors('email');
-        }
-      }
-
-      if (name === 'password' || !name) {
-        const password = value.password?.toString() || '';
-        if (/\s/.test(password)) {
-          form.setError('password', {
-            // message: 'Password cannot contain spaces. Please remove all spaces.',
-            type: 'manual',
-          });
-        } else if (form.formState.errors.password?.type === 'manual') {
-          form.clearErrors('password');
-        }
-      }
-
-      if ((name === 'password' || name === 'confirmPassword' || !name) && value.password && value.confirmPassword) {
-        if (value.password !== value.confirmPassword) {
-          form.setError('confirmPassword', {
-            message: "Passwords don't match",
-            type: 'manual',
-          });
-        } else if (form.formState.errors.confirmPassword?.type === 'manual') {
-          form.clearErrors('confirmPassword');
-        }
-      }
-    });
-
-    return (): void => subscription.unsubscribe();
-  }, [form]);
 
   function onSubmit(data: FormData): void {
     if (/\s/.test(data.email)) {
