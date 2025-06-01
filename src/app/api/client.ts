@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import type { _BaseAddress } from '@commercetools/platform-sdk';
 import type { Client } from '@commercetools/ts-client';
 
 import myTokenCache from '@/app/api/token-cache';
@@ -612,6 +613,26 @@ export default class CustomerClient {
       this.customerClient = createRefreshCustomerClient(token);
       this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
     }
+  }
+
+  public async updateAddress(address: _BaseAddress, addressId: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'changeAddress', address, addressId }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
   }
 
   public async updatePersonalInfo(personalInfo: { [key: string]: string }): Promise<Customer | null> {

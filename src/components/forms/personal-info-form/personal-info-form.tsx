@@ -52,7 +52,7 @@ const isValidLastName = (
   errorMessage: string;
   result: z.SafeParseReturnType<string, string>;
 } => {
-  const errorMessage = 'First name can only contain letters, spaces, hyphens and apostrophes';
+  const errorMessage = 'Last name can only contain letters, spaces, hyphens and apostrophes';
   const firstNameSchema = z
     .string()
     .trim()
