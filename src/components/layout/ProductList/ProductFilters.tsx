@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SlidersHorizontal, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export interface FilterOption {
   count?: number;
@@ -37,6 +37,8 @@ export interface FilterState {
 interface ProductFiltersProps {
   className?: string;
   filterGroups: FilterGroup[];
+  initialFilters?: FilterState;
+  onCategoryChange?: (categories: string[]) => void;
   onFilterChange: (filters: FilterState) => void;
 }
 
@@ -47,6 +49,7 @@ const PRICE_STORAGE_KEY = 'book-filter-prices';
 export default function ProductFilters({
   className = '',
   filterGroups,
+  initialFilters = {},
   onFilterChange,
 }: ProductFiltersProps): JSX.Element {
   const [filters, setFilters] = useState<FilterState>({});
@@ -54,6 +57,26 @@ export default function ProductFilters({
   const [localPrices, setLocalPrices] = useState<[number, number] | null>(null);
   const [hasUnappliedPriceChanges, setHasUnappliedPriceChanges] = useState<boolean>(false);
   const [isEditingPrice, setIsEditingPrice] = useState<boolean>(false);
+  const isInitialFilterMount = useRef(true);
+  const preventFilterEmit = useRef(false);
+  const isHandlingExternalUpdate = useRef(false);
+
+  useEffect(() => {
+    if (isInitialFilterMount.current) {
+      isInitialFilterMount.current = false;
+      return;
+    }
+
+    if (preventFilterEmit.current) {
+      preventFilterEmit.current = false;
+      return;
+    }
+
+    if (onFilterChange) {
+      console.log('call onFilterChange with:', filters);
+      onFilterChange(filters);
+    }
+  }, [filters, onFilterChange]);
 
   useEffect(() => {
     if (filterGroups.length > 0) {
@@ -62,11 +85,26 @@ export default function ProductFilters({
   }, [filterGroups]);
 
   useEffect(() => {
-    if (onFilterChange) {
+    if (onFilterChange && !isHandlingExternalUpdate.current) {
       console.log('call onFilterChange with:', filters);
       onFilterChange(filters);
     }
+    isHandlingExternalUpdate.current = false;
   }, [filters, onFilterChange]);
+
+  useEffect(() => {
+    if (Object.keys(initialFilters).length > 0) {
+      isHandlingExternalUpdate.current = true;
+      // Update your local filters from initialFilters
+      setFilters((prev) => {
+        // Only update if different
+        if (JSON.stringify(prev) !== JSON.stringify(initialFilters)) {
+          return { ...initialFilters };
+        }
+        return prev;
+      });
+    }
+  }, [initialFilters]);
 
   useEffect(() => {
     if (isEditingPrice) {
@@ -93,6 +131,7 @@ export default function ProductFilters({
   }, [filterGroups, filters, localPrices, isEditingPrice]);
 
   useEffect(() => {
+    preventFilterEmit.current = true;
     const savedFilters = localStorage.getItem(FILTERS_STORAGE_KEY);
     if (savedFilters) {
       try {

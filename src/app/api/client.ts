@@ -576,14 +576,24 @@ export default class CustomerClient {
           }
         }
 
-        if (filterParams.categoryIds && Array.isArray(filterParams.categoryIds)) {
-          if (filterParams.categoryIds.length === 1) {
-            filterQuery.push(`categories.id:"${filterParams.categoryIds[0]}"`);
-          } else {
-            filterParams.categoryIds.forEach((categoryId) => {
-              filterQuery.push(`categories.id:"${categoryId}"`);
-            });
-          }
+        if (
+          filterParams.categoryIds &&
+          Array.isArray(filterParams.categoryIds) &&
+          filterParams.categoryIds.length > 0
+        ) {
+          // if (filterParams.categoryOperator === 'or' && filterParams.categoryIds.length > 1) {
+          //   const categoryFilter = filterParams.categoryIds
+          //     .map(catId => `categories.id:"${catId}"`)
+          //     .join(' or ');
+          //   filterQuery.push(`(${categoryFilter})`);
+          // } else {
+          //   filterParams.categoryIds.forEach(categoryId => {
+          //     filterQuery.push(`categories.id:"${categoryId}"`);
+          //   });
+          // }
+          filterParams.categoryIds.forEach((categoryId) => {
+            filterQuery.push(`categories.id:"${categoryId}"`);
+          });
         }
 
         console.log('Search filter query:', filterQuery);
