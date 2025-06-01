@@ -675,6 +675,46 @@ export default class CustomerClient {
     return null;
   }
 
+  public async updateDefaultBillingAddress(addressId: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'setDefaultBillingAddress', addressId }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
+  public async updateDefaultShippingAddress(addressId: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'setDefaultShippingAddress', addressId }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
   public async updatePersonalInfo(personalInfo: { [key: string]: string }): Promise<Customer | null> {
     if (this.customerRoot) {
       const customer = await this.getCustomerInfo();

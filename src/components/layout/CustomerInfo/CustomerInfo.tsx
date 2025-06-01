@@ -3,6 +3,7 @@
 import type { Address, Customer } from '@commercetools/platform-sdk';
 
 import AddressForm from '@/components/forms/address-form/address-form';
+import ChangeDefaultAddressesForm from '@/components/forms/change-default-address-form/change-default-address-form';
 import ChangePasswordForm from '@/components/forms/change-password-form/change-password-form';
 import PersonalInfoForm from '@/components/forms/personal-info-form/personal-info-form';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,6 @@ const countrySwitch = (country: string): string => {
 export default function CustomerInfo(): JSX.Element {
   const { customerClient } = useCustomerClient();
   const [customerData, setCustomerData] = useState<Customer | null>(null);
-  const [defaultShippingAddress, setDefaultShippingAddress] = useState<Address | undefined>(undefined);
 
   const handleDeleteClick = async (addressId: string): Promise<void> => {
     const updatedCustomer = await customerClient.removeAddress(addressId);
@@ -48,22 +48,21 @@ export default function CustomerInfo(): JSX.Element {
     }
   }, [customerClient]);
 
-  useEffect(() => {
-    if (customerData) {
-      setDefaultShippingAddress(
-        customerData.addresses.find((address) => address.id === customerData.defaultShippingAddressId),
-      );
-    }
-  }, [customerData]);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [defaultModalOpen, setDefaultModalOpen] = useState(false);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [addAddressModalOpen, setAddAddressModalOpen] = useState(false);
   const [addressId, setAddressId] = useState('');
 
   const getAddressTitle = (customerData: Customer | null, id: string | undefined): string => {
     if (customerData) {
+      if (
+        customerData.defaultBillingAddressId === customerData.defaultShippingAddressId &&
+        customerData.defaultBillingAddressId === id
+      ) {
+        return 'Default billing address & Default shipping address';
+      }
       if (customerData.defaultBillingAddressId === id) {
         return 'Default billing address';
       }
@@ -83,6 +82,9 @@ export default function CustomerInfo(): JSX.Element {
   const handleChangePasswordClick = (): void => {
     setPasswordModalOpen(true);
   };
+  const handleDefaultAddressesClick = (): void => {
+    setDefaultModalOpen(true);
+  };
 
   const handleEditAddressClick = (id: string): void => {
     setAddressId(id);
@@ -93,7 +95,7 @@ export default function CustomerInfo(): JSX.Element {
     setAddAddressModalOpen(true);
   };
 
-  const displayAddress = (address: Address, isEqual: boolean): JSX.Element => (
+  const displayAddress = (address: Address): JSX.Element => (
     <Card className="group/editAddress relative w-full mb-8" key={address.id}>
       <button
         className="opacity-0 group-hover/editAddress:opacity-100 transition-opacity absolute top-2 right-10"
@@ -108,9 +110,7 @@ export default function CustomerInfo(): JSX.Element {
         <Edit className="h-5 w-5"></Edit>
       </button>
       <CardHeader>
-        <CardTitle>
-          {isEqual ? 'Default shipping Address' : getAddressTitle(customerData || null, address.id)}
-        </CardTitle>
+        <CardTitle>{getAddressTitle(customerData || null, address.id)}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p>Country: {countrySwitch(address.country)}</p>
@@ -169,15 +169,19 @@ export default function CustomerInfo(): JSX.Element {
           >
             <Plus className="h-5 w-5"></Plus>
           </button>
+          <Card className="group relative w-full max-w-xl">
+            <CardHeader>
+              <CardTitle>Change shipping and billing addresses</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col">
+                <Button onClick={handleDefaultAddressesClick}>Change</Button>
+              </div>
+            </CardContent>
+          </Card>
           <div className="flex flex-col">
             {customerData ? (
-              <div>
-                {customerData.defaultShippingAddressId === customerData.defaultBillingAddressId &&
-                defaultShippingAddress
-                  ? displayAddress(defaultShippingAddress, true)
-                  : ''}
-                {customerData.addresses.map((address) => displayAddress(address, false))}
-              </div>
+              <div>{customerData.addresses.map((address) => displayAddress(address))}</div>
             ) : (
               <p>No data</p>
             )}
@@ -196,6 +200,12 @@ export default function CustomerInfo(): JSX.Element {
         setCustomerData={setCustomerData}
         setModalOpen={setPasswordModalOpen}
       ></ChangePasswordForm>
+      <ChangeDefaultAddressesForm
+        customerData={customerData}
+        modalOpen={defaultModalOpen}
+        setCustomerData={setCustomerData}
+        setModalOpen={setDefaultModalOpen}
+      ></ChangeDefaultAddressesForm>
       <AddressForm
         addressId={addressId}
         customerData={customerData}
