@@ -51,7 +51,7 @@ const isValidLastName = (
   errorMessage: string;
   result: z.SafeParseReturnType<string, string>;
 } => {
-  const errorMessage = 'First name can only contain letters, spaces, hyphens and apostrophes';
+  const errorMessage = 'Last name can only contain letters, spaces, hyphens and apostrophes';
   const firstNameSchema = z
     .string()
     .trim()
@@ -237,6 +237,7 @@ export default function PersonalInfoForm(props: propsType): JSX.Element | null {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
     const formValues = getValuesFromForm(e);
     try {
       await customerClient.updatePersonalInfo(formValues);
