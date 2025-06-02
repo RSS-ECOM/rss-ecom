@@ -1,7 +1,10 @@
+import type { BreadcrumbItemProps } from '@/components/layout/Nav/Breadcrumbs';
+
+import Breadcrumbs from '@/components/layout/Nav/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-const categories = [
+export const categories = [
   {
     description: 'Fiction books',
     externalId: 'cat-fiction-001',
@@ -61,8 +64,12 @@ const categories = [
 ];
 
 export default function CategoriesPage(): JSX.Element {
+  const breadcrumbItems: BreadcrumbItemProps[] = [{ href: '/categories', isCurrentPage: true, label: 'Categories' }];
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <Breadcrumbs items={breadcrumbItems} />
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Book Categories</h1>
         <p className="text-muted-foreground">Explore our book collection by category to find your next great read.</p>

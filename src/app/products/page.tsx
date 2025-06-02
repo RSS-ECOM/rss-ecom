@@ -1,7 +1,13 @@
+import type { BreadcrumbItemProps } from '@/components/layout/Nav/Breadcrumbs';
+
+import Breadcrumbs from '@/components/layout/Nav/Breadcrumbs';
+// import CategoryNavigation from '@/components/layout/Nav/CategoryNavigation';
 import ProductSearchWrapper from '@/components/layout/Search/ProductSearchWrapper';
 import { Button } from '@/components/ui/button';
 import { XCircle } from 'lucide-react';
-import Link from 'next/link'; // Make sure to import this
+import Link from 'next/link';
+
+import { categories } from '../categories/page';
 
 type ProductsPageProps = {
   searchParams: {
@@ -13,8 +19,17 @@ type ProductsPageProps = {
 export default function ProductsPage({ searchParams }: ProductsPageProps): JSX.Element {
   const { categoryId, q: searchQuery } = searchParams;
 
+  const breadcrumbItems: BreadcrumbItemProps[] = searchQuery
+    ? [
+        { href: '/products', label: 'Products' },
+        { href: `/products?q=${searchQuery}`, isCurrentPage: true, label: `Search: "${searchQuery}"` },
+      ]
+    : [{ href: '/products', isCurrentPage: true, label: 'Products' }];
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <Breadcrumbs items={breadcrumbItems} />
+
       <div className="mb-8">
         {searchQuery ? (
           <div className="flex flex-col sm:flex-row sm:items-start gap-4">
@@ -39,7 +54,34 @@ export default function ProductsPage({ searchParams }: ProductsPageProps): JSX.E
         )}
       </div>
 
-      <ProductSearchWrapper categoryId={categoryId} searchQuery={searchQuery} />
+      {/* Categories as horizontal tabs at the top */}
+      <div className="mb-6 overflow-x-auto pb-2 hidden md:block">
+        <div className="flex space-x-2 min-w-max">
+          <h4 className="text-xl font-bold mb-2">Categories</h4>
+          <Button asChild size="sm" variant={!categoryId ? 'secondary' : 'ghost'}>
+            <Link href="/products">All Books</Link>
+          </Button>
+          {categories.map((category) => (
+            <Button asChild key={category.id} size="sm" variant={category.id === categoryId ? 'secondary' : 'ghost'}>
+              <Link href={`/categories/${category.slug}`}>{category.name}</Link>
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+        {/* sidebar navigation 
+        <div className="hidden md:block">
+          <CategoryNavigation 
+            activeCategoryId={categoryId} 
+            categories={categories}
+          />
+        </div> */}
+
+        <div className="col-span-1 md:col-span-3">
+          <ProductSearchWrapper categoryId={categoryId} searchQuery={searchQuery} />
+        </div>
+      </div>
     </div>
   );
 }
