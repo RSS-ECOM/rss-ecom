@@ -129,7 +129,7 @@ export default function NewArrivalsSection({
               <CarouselNext className="-right-12 border-amber-500 text-amber-500 hover:bg-amber-100 hover:text-amber-600" />
             </div>
 
-            <div className="mt-4 flex justify-center gap-2 sm:hidden absolute bottom-0 left-0 right-0">
+            <div className="mt-4 flex justify-center gap-2 sm:hidden sm:bottom-4 absolute md:bottom-0 left-0 right-0">
               <CarouselPrevious
                 className="relative inset-0 translate-y-0 border-amber-500 text-amber-500 hover:bg-amber-100 hover:text-amber-600"
                 variant="outline"
