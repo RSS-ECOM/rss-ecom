@@ -1,6 +1,4 @@
-import type { Customer } from '@commercetools/platform-sdk';
-import type { ErrorResponse } from '@commercetools/platform-sdk';
-import type { ChangeEvent } from 'react';
+import type { Customer, ErrorResponse } from '@commercetools/platform-sdk';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -16,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useCustomerClient } from '@/lib/customer-client';
-import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import { type ChangeEvent, type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import { z } from 'zod';
 
 type propsType = {
