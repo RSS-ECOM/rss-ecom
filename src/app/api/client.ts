@@ -333,6 +333,12 @@ export default class CustomerClient {
             case 'name-desc':
               sort = ['name.en-US desc'];
               break;
+            case 'createdAt-desc':
+              sort = ['createdAt desc'];
+              break;
+            case 'createdAt-asc':
+              sort = ['createdAt asc'];
+              break;
             default:
               break;
           }

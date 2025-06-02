@@ -2,12 +2,14 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { type ProductProjection } from '@commercetools/platform-sdk';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
 interface ProductCardProps {
+  className?: string;
   formatPrice: (price: number, currencyCode?: string) => string;
   product: ProductProjection;
 }
@@ -49,7 +51,7 @@ const getLocalizedText = (localizedObject: LocalizedString | null | string | und
 
   return defaultText;
 };
-export default function ProductCard({ formatPrice, product }: ProductCardProps): JSX.Element {
+export default function ProductCard({ className, formatPrice, product }: ProductCardProps): JSX.Element {
   const [isHovered, setIsHovered] = useState(false);
 
   const { prices = [] } = product.masterVariant;
@@ -114,9 +116,11 @@ export default function ProductCard({ formatPrice, product }: ProductCardProps):
   return (
     <Link className="block h-full" href={`/products/${product.id}`}>
       <Card
-        className={`overflow-hidden flex flex-col h-full transition-all duration-300 ${
-          isHovered ? 'shadow-xl transform scale-[1.02]' : 'shadow-md hover:shadow-lg'
-        }`}
+        className={cn(
+          'overflow-hidden flex flex-col h-full transition-all duration-300',
+          isHovered ? 'shadow-xl transform scale-[1.02]' : 'shadow-md hover:shadow-lg',
+          className,
+        )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -205,7 +209,7 @@ export default function ProductCard({ formatPrice, product }: ProductCardProps):
               className={`font-medium transition-all duration-300 ${
                 isHovered
                   ? 'bg-amber-800/20 hover:bg-amber-400/30 text-foreground border-amber-500'
-                  : 'border-amber-500/70 hover:bg-amber-500/30 hover:border-amber-500'
+                  : 'border-amber-500/70 hover:bg-amber-500/30 hover:border-amber-500 dark:bg-amber-800/50'
               }`}
               //         onClick={(e) => {
               //   e.preventDefault();
