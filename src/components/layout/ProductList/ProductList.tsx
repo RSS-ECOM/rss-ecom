@@ -662,7 +662,9 @@ export default function ProductList({
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <div className="col-span-1 md:col-span-4 flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-2xl font-bold">{categoryId ? 'Category Products' : 'All Products'}</h2>
+          <h2 className="text-2xl font-bold dark:text-foreground">
+            {categoryId ? 'Category Products' : 'All Products'}
+          </h2>
         </div>
         <ProductSort onSortChange={handleSortChange} selectedSort={sortOption} />
       </div>

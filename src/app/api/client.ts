@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
-import type { _BaseAddress } from '@commercetools/platform-sdk';
 import type { Client } from '@commercetools/ts-client';
 
 import myTokenCache from '@/app/api/token-cache';
 import {
+  type _BaseAddress,
   type ByProjectKeyRequestBuilder,
   type Customer,
   type CustomerDraft,

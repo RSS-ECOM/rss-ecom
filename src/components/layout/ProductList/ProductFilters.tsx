@@ -582,7 +582,7 @@ export default function ProductFilters({
   const desktopFilters = (
     <div className={`hidden md:block ${className}`}>
       <div className="flex justify-between mb-4">
-        <h2 className="text-lg font-semibold">Filters</h2>
+        <h2 className="text-lg font-semibold dark:text-foreground">Filters</h2>
         {activeFiltersCount > 0 && (
           <Button className="text-sm text-primary" onClick={resetFilters} size="sm" variant="ghost">
             Reset all
@@ -602,7 +602,7 @@ export default function ProductFilters({
       >
         {filterGroups.map((group) => (
           <AccordionItem key={group.id} value={group.id}>
-            <AccordionTrigger className="text-sm font-medium">{group.name}</AccordionTrigger>
+            <AccordionTrigger className="text-sm font-medium dark:text-foreground">{group.name}</AccordionTrigger>
             <AccordionContent>{renderFilterGroup(group)}</AccordionContent>
           </AccordionItem>
         ))}
