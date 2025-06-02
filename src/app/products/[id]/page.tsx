@@ -2,6 +2,7 @@
 
 import type { BreadcrumbItemProps } from '@/components/layout/Nav/Breadcrumbs';
 
+import { categories } from '@/app/data/categories';
 import Breadcrumbs from '@/components/layout/Nav/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -11,8 +12,6 @@ import { useProduct } from '@/hooks/use-product';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
-import { categories } from '../../categories/page';
 
 export default function ProductPage({ params }: { params: { id: string } }): JSX.Element {
   const [api, setApi] = useState<CarouselApi>();

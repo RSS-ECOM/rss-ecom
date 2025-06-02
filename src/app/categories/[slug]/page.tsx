@@ -2,14 +2,13 @@
 
 import type { BreadcrumbItemProps } from '@/components/layout/Nav/Breadcrumbs';
 
+import { categories } from '@/app/data/categories';
 import Breadcrumbs from '@/components/layout/Nav/Breadcrumbs';
 // import CategoryNavigation from '@/components/layout/Nav/CategoryNavigation';
 import ProductList from '@/components/layout/ProductList/ProductList';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-
-import { categories } from '../page';
 
 export default function CategoryPage(): JSX.Element {
   const params = useParams();

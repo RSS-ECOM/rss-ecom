@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { XCircle } from 'lucide-react';
 import Link from 'next/link';
 
-import { categories } from '../categories/page';
+import { categories } from '../data/categories';
 
 type ProductsPageProps = {
   searchParams: {
