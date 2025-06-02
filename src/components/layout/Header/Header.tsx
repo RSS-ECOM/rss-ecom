@@ -79,7 +79,7 @@ export default function Header(): JSX.Element {
           <form className="relative hidden md:flex w-full max-w-sm items-center" onSubmit={handleSearchSubmit}>
             {/* <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" /> */}
             <input
-              className={`rounded-md border border-input pl-2 pr-14 py-2 text-sm 
+              className={`rounded-md min-w-[170px] border border-input pl-2 pr-14 py-2 text-sm 
                   ring-offset-background file:border-0 file:text-foreground 
                   placeholder:text-muted-foreground placeholder:opacity-60 
                   focus-visible:outline-none focus-visible:ring-2 

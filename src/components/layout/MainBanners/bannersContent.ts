@@ -49,7 +49,7 @@ const banners: Banner[] = [
       overlay: 'bg-gradient-to-t from-white/70 to-transparent',
       position: 'center',
       textAlign: 'center',
-      title: 'text-black font-extrabold',
+      title: 'text-black font-extrabold md:leading-tight',
     },
     description: 'Explore our latest discounts and special offers on bestsellers',
     id: '3',
