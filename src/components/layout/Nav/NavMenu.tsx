@@ -9,7 +9,7 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
-import { Book, BookCopy, BookMarked, BookOpen, Users } from 'lucide-react';
+import { Book, BookCopy, BookMarked, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -75,7 +75,7 @@ function NavMenu(): React.JSX.Element {
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        <NavigationMenuItem className="relative group/authors">
+        {/* <NavigationMenuItem className="relative group/authors">
           <NavigationMenuTrigger className={clearNavigationMenuTriggerStyle}>
             Authors
             <span className="h-[1px] inline-block bg-primary absolute left-0 -bottom-1 w-0 group-hover/authors:w-full transition-[width] duration-300 ease-in-out" />
@@ -107,22 +107,7 @@ function NavMenu(): React.JSX.Element {
               </ListItem>
             </ul>
           </NavigationMenuContent>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem className="relative group/events">
-          <Link href="/events" legacyBehavior passHref>
-            <NavigationMenuLink className={clearNavigationMenuLinkStyle}>
-              Events
-              <span
-                className={cn(
-                  'h-[1px] inline-block bg-primary absolute left-0 -bottom-1',
-                  'group-hover/events:w-full transition-[width] duration-300 ease-in-out',
-                  pathname === '/events' ? 'w-full' : 'w-0',
-                )}
-              />
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
+        </NavigationMenuItem> */}
 
         <NavigationMenuItem className="relative group/blog">
           <Link href="/blog" legacyBehavior passHref>
@@ -148,6 +133,21 @@ function NavMenu(): React.JSX.Element {
                   'h-[1px] inline-block bg-primary absolute left-0 -bottom-1',
                   'group-hover/about:w-full transition-[width] duration-300 ease-in-out',
                   pathname === '/about' ? 'w-full' : 'w-0',
+                )}
+              />
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem className="relative group/contacts">
+          <Link href="/contacts" legacyBehavior passHref>
+            <NavigationMenuLink className={clearNavigationMenuLinkStyle}>
+              Contact Us
+              <span
+                className={cn(
+                  'h-[1px] inline-block bg-primary absolute left-0 -bottom-1',
+                  'group-hover/contacts:w-full transition-[width] duration-300 ease-in-out',
+                  pathname === '/contacts' ? 'w-full' : 'w-0',
                 )}
               />
             </NavigationMenuLink>

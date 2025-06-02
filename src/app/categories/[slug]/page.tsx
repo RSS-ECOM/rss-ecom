@@ -37,13 +37,13 @@ export default function CategoryPage(): JSX.Element {
       <Breadcrumbs items={breadcrumbItems} />
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{category.name} Books</h1>
+        <h1 className="text-3xl font-bold mb-2 dark:text-foreground">{category.name} Books</h1>
         <p className="text-muted-foreground">{category.description}</p>
       </div>
 
       <div className="mb-6 overflow-x-auto pb-2 hidden md:block">
         <div className="flex space-x-2 min-w-max">
-          <h4 className="text-xl font-bold mb-2">Categories</h4>
+          <h4 className="text-xl font-bold mb-2 dark:text-foreground">Categories</h4>
           <Button asChild size="sm" variant="ghost">
             <Link href="/products">All Books</Link>
           </Button>

@@ -137,12 +137,10 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
         </form>
         <nav className="flex flex-col space-y-1">
           <MobileNavLink href="/products">All Books</MobileNavLink>
-          <MobileNavLink href="/categories/fiction">Fiction</MobileNavLink>
-          <MobileNavLink href="/categories/non-fiction">Non-Fiction</MobileNavLink>
-          <MobileNavLink href="/categories/children">Children Books</MobileNavLink>
-          <MobileNavLink href="/authors">Authors</MobileNavLink>
-          <MobileNavLink href="/events">Events</MobileNavLink>
+          <MobileNavLink href="/categories">Categories</MobileNavLink>
+          {/* <MobileNavLink href="/authors">Authors</MobileNavLink> */}
           <MobileNavLink href="/about">About</MobileNavLink>
+          <MobileNavLink href="/contacts">Contact Us</MobileNavLink>
 
           {isLoggedIn ? (
             <>
