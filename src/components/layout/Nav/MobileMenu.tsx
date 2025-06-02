@@ -156,7 +156,7 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
           )}
         </nav>
 
-        <div className="mt-6 bg-gradient-to-r from-rose-100 to-indigo-100 dark:from-rose-900/20 dark:to-indigo-900/20 rounded-lg p-4 overflow-hidden relative">
+        {/* <div className="mt-6 bg-gradient-to-r from-rose-100 to-indigo-100 dark:from-rose-900/20 dark:to-indigo-900/20 rounded-lg p-4 overflow-hidden relative">
           <div className="relative z-10">
             <h3 className="text-xl font-bold mb-2">Summer Reading Collection</h3>
             <p className="text-sm text-muted-foreground mb-3">
@@ -166,7 +166,7 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
               Explore Collection
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
