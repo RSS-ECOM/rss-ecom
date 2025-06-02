@@ -31,7 +31,7 @@ export default function ContactsPage(): JSX.Element {
               <div className="flex items-start">
                 <MapPin className="h-5 w-5 mr-2 text-primary shrink-0 mt-0.5" />
                 <span>
-                  Strand Book Store
+                  Story Hive Book Store
                   <br />
                   828 Broadway
                   <br />

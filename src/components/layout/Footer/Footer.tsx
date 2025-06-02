@@ -4,6 +4,7 @@ import { CustomButton, CustomLink } from '@/components/ui/CustomLink';
 import LogoDesktop from '@/components/ui/Logo/LogoDesktop';
 import { useCustomer } from '@/hooks/use-customer';
 import useAuthStore from '@/store/auth-store';
+import { Mail, MapPin, Phone } from 'lucide-react';
 import { useCallback } from 'react';
 
 export default function Footer(): JSX.Element {
@@ -29,7 +30,7 @@ export default function Footer(): JSX.Element {
               </p>
             </div>
           </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-3 md:grid-cols-3 gap-y-8 md:gap-8">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 md:grid-cols-4 gap-y-8 md:gap-8">
             {/* Account section */}
             <div className="space-y-3">
               <h3 className="text-lg md:text-xl font-bold dark:text-foreground">Account</h3>
@@ -75,7 +76,7 @@ export default function Footer(): JSX.Element {
                   <CustomLink href="/categories">Categories</CustomLink>
                 </li>
                 <li>
-                  <CustomLink href="/authors">Authors</CustomLink>
+                  <CustomLink href="/sale">Sale</CustomLink>
                 </li>
                 <li>
                   <CustomLink href="/cart">Shopping Cart</CustomLink>
@@ -90,13 +91,42 @@ export default function Footer(): JSX.Element {
                   <CustomLink href="/about">About Us</CustomLink>
                 </li>
                 <li>
-                  <CustomLink href="/events">Book Events</CustomLink>
+                  <CustomLink href="/events">Blog</CustomLink>
                 </li>
                 <li>
-                  <CustomLink href="/privacy-policy">Privacy Policy</CustomLink>
+                  <CustomLink href="/policy">Privacy Policy</CustomLink>
                 </li>
                 <li>
-                  <CustomLink href="/contact">Contact Us</CustomLink>
+                  <CustomLink href="/contacts">Contact Us</CustomLink>
+                </li>
+              </ul>
+            </div>
+
+            {/* Contact section */}
+            <div className="space-y-3">
+              <h3 className="text-lg md:text-xl font-bold dark:text-foreground">Contact Us</h3>
+              <ul className="space-y-3">
+                <li>
+                  <div className="flex items-start">
+                    <MapPin className="h-5 w-5 mr-2 text-primary shrink-0 mt-0.5" />
+                    <span className="text-sm">
+                      828 Broadway
+                      <br />
+                      New York, NY 10003
+                    </span>
+                  </div>
+                </li>
+                <li>
+                  <div className="flex items-center">
+                    <Phone className="h-5 w-5 mr-2 text-primary shrink-0" />
+                    <span className="text-sm">+1 210-478-1452</span>
+                  </div>
+                </li>
+                <li>
+                  <div className="flex items-center">
+                    <Mail className="h-5 w-5 mr-2 text-primary shrink-0" />
+                    <span className="text-sm">admin@storyhive.com</span>
+                  </div>
                 </li>
               </ul>
             </div>
