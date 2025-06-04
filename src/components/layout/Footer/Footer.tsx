@@ -148,7 +148,7 @@ export default function Footer(): JSX.Element {
               </CustomLink>
               <CustomLink
                 className="px-1 text-xs md:text-sm text-muted-foreground hover:text-foreground"
-                href="/contact"
+                href="/contacts"
               >
                 Contact
               </CustomLink>
