@@ -130,7 +130,7 @@ export default function AboutPage(): React.JSX.Element {
           <div className="mt-12 text-center">
             <Link
               className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors"
-              href="/contact"
+              href="/contacts"
             >
               Contact Us
             </Link>
