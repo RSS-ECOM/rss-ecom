@@ -1,12 +1,16 @@
+/* eslint-disable no-console */
 import type { Client } from '@commercetools/ts-client';
 
 import myTokenCache from '@/app/api/token-cache';
 import {
+  type _BaseAddress,
   type ByProjectKeyRequestBuilder,
   type Customer,
   type CustomerDraft,
   type CustomerSignInResult,
+  type ProductProjection,
   type ProductProjectionPagedQueryResponse,
+  type QueryParam,
   createApiBuilderFromCtpClient,
 } from '@commercetools/platform-sdk';
 import Cookies from 'js-cookie';
@@ -21,6 +25,21 @@ interface JwtPayload {
 interface ApiResponse {
   [key: string]: unknown;
 }
+
+type CommerceToolsQueryArgs = {
+  [key: string]: QueryParam;
+  filter?: string | string[];
+  fuzzy?: boolean;
+  fuzzyLevel?: number;
+  limit?: number;
+  markMatchingVariants?: boolean;
+  offset?: number;
+  priceCountry?: string;
+  priceCurrency?: string;
+  priceCustomerGroup?: string;
+  sort?: string | string[];
+  staged?: boolean;
+};
 
 // interface MyTokenCache {
 //   cachedToken: {
@@ -63,9 +82,14 @@ export default class CustomerClient {
 
   constructor() {
     this.ctpClient = createCtpClient();
+
+    this.customerClient = createCtpClient();
+    this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
+
     const token = Cookies.get('login');
     if (token) {
       this.customerClient = createRefreshCustomerClient(token);
+      this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
     }
   }
 
@@ -93,7 +117,27 @@ export default class CustomerClient {
     }
   }
 
-  public async callApi(path: string, options: RequestInit = {}): Promise<unknown> {
+  public async addAddress(address: _BaseAddress): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'addAddress', address }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
+  public async callApi<T>(path: string, options: RequestInit = {}): Promise<T | null> {
     const url = `${this.apiUrl}${path}`;
 
     try {
@@ -135,12 +179,48 @@ export default class CustomerClient {
         return null;
       }
 
-      const result: unknown = await response.json();
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const result: T = (await response.json()) as T;
       return result;
     } catch (error) {
       console.error(`API call failed: ${path}`, error);
       throw error;
     }
+  }
+
+  public async changePassword(currentPassword: string, newPassword: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .password()
+          .post({
+            body: {
+              currentPassword,
+              newPassword,
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
+  public async getCustomerInfo(): Promise<Customer | null> {
+    try {
+      if (this.customerRoot) {
+        const response = await this.customerRoot.me().get().execute();
+        return response.body;
+      }
+    } catch (error) {
+      console.error('Error fetching customer profile:', error);
+      return null;
+    }
+    return null;
   }
 
   public async getMe(): Promise<ApiResponse | null> {
@@ -182,11 +262,203 @@ export default class CustomerClient {
     }
   }
 
-  public async getProducts(): Promise<ProductProjectionPagedQueryResponse | null> {
+  public async getProductById(id: string): Promise<ProductProjection | null> {
     if (this.customerRoot) {
-      const response = await this.customerRoot.productProjections().get().execute();
-      return response.body;
+      try {
+        const response = await this.customerRoot.productProjections().withId({ ID: id }).get().execute();
+        return response.body;
+      } catch (error) {
+        console.error(`Error fetching product with id ${id}:`, error);
+        return null;
+      }
     }
+    return null;
+  }
+
+  public async getProducts(
+    filterParams: Record<string, unknown> = {},
+  ): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log('Getting products with filters:', filterParams);
+
+    if (this.customerRoot) {
+      try {
+        const filterQuery: string[] = [];
+
+        filterQuery.push('published:true');
+
+        if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
+          const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
+          const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
+
+          console.log(`Price filter values: min=${minPrice}, max=${maxPrice}`);
+
+          if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+            console.log(`Added price range filter: variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+          } else if (minPrice > 0) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to *)`);
+          } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(* to ${maxPrice})`);
+          }
+        }
+
+        if (
+          filterParams.categoryIds &&
+          Array.isArray(filterParams.categoryIds) &&
+          filterParams.categoryIds.length > 0
+        ) {
+          if (filterParams.categoryIds.length === 1) {
+            filterQuery.push(`categories.id:"${filterParams.categoryIds[0]}"`);
+          } else {
+            filterParams.categoryIds.forEach((categoryId) => {
+              filterQuery.push(`categories.id:"${categoryId}"`);
+            });
+          }
+        }
+
+        console.log('Filter query:', filterQuery);
+
+        let sort: string[] = [];
+        if (filterParams.sortBy) {
+          switch (filterParams.sortBy) {
+            case 'price-asc':
+              sort = ['price asc'];
+              break;
+            case 'price-desc':
+              sort = ['price desc'];
+              break;
+            case 'name-asc':
+              sort = ['name.en-US asc'];
+              break;
+            case 'name-desc':
+              sort = ['name.en-US desc'];
+              break;
+            case 'createdAt-desc':
+              sort = ['createdAt desc'];
+              break;
+            case 'createdAt-asc':
+              sort = ['createdAt asc'];
+              break;
+            default:
+              break;
+          }
+        }
+
+        console.log('Sorting parameters:', sort);
+
+        const response = await this.customerRoot
+          .productProjections()
+          .search()
+          .get({
+            queryArgs: {
+              filter: filterQuery,
+              limit: 100,
+              sort: sort.length > 0 ? sort : undefined,
+            },
+          })
+          .execute();
+
+        console.log('Products response:', response.statusCode, 'Total items:', response.body?.total);
+        return response.body;
+      } catch (error) {
+        console.error('Error fetching products with filters:', error);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  public async getProductsByCategory(
+    categoryId: string,
+    filterParams: Record<string, unknown> = {},
+  ): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log(`Getting products for category ${categoryId} with filters:`, filterParams);
+
+    if (this.customerRoot) {
+      try {
+        const filterQuery: string[] = [];
+
+        filterQuery.push(`categories.id:"${categoryId}"`);
+        filterQuery.push('published:true');
+
+        if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
+          const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
+          const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
+
+          console.log(`Price filter values: min=${minPrice}, max=${maxPrice}`);
+
+          if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+            console.log(`Added price range filter: variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+          } else if (minPrice > 0) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to *)`);
+          } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(* to ${maxPrice})`);
+          }
+        }
+
+        if (
+          filterParams.categoryIds &&
+          Array.isArray(filterParams.categoryIds) &&
+          filterParams.categoryIds.length > 0
+        ) {
+          if (filterParams.categoryIds.length === 1) {
+            filterQuery.push(`categories.id:"${filterParams.categoryIds[0]}"`);
+          } else {
+            filterParams.categoryIds.forEach((categoryId) => {
+              filterQuery.push(`categories.id:"${categoryId}"`);
+            });
+          }
+        }
+
+        console.log('Filter query for category:', filterQuery);
+
+        let sort: string[] = [];
+        if (filterParams.sortBy) {
+          switch (filterParams.sortBy) {
+            case 'price-asc':
+              sort = ['price asc'];
+              break;
+            case 'price-desc':
+              sort = ['price desc'];
+              break;
+            case 'name-asc':
+              sort = ['name.en-US asc'];
+              break;
+            case 'name-desc':
+              sort = ['name.en-US desc'];
+              break;
+            default:
+              break;
+          }
+        }
+
+        const response = await this.customerRoot
+          .productProjections()
+          .search()
+          .get({
+            queryArgs: {
+              filter: filterQuery,
+              limit: 100,
+              sort: sort.length > 0 ? sort : undefined,
+            },
+          })
+          .execute();
+
+        console.log(
+          `Products for category ${categoryId} response:`,
+          response.statusCode,
+          'Total items:',
+          response.body?.total,
+        );
+        return response.body;
+      } catch (error) {
+        console.error(`Error fetching products for category ${categoryId}:`, error);
+        return null;
+      }
+    }
+
+    console.warn('No customerRoot available to fetch products by category');
     return null;
   }
 
@@ -235,7 +507,6 @@ export default class CustomerClient {
       }
     } catch (error) {
       console.error('Error refreshing token:', error);
-      // Очищаем токены при ошибке
       myTokenCache.tokenCache.set({
         expirationTime: 0,
         token: '',
@@ -268,12 +539,221 @@ export default class CustomerClient {
     return null;
   }
 
+  public async removeAddress(addressId: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'removeAddress', addressId }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
+  public async searchProducts(
+    searchQuery: string,
+    filterParams: Record<string, unknown> = {},
+  ): Promise<ProductProjectionPagedQueryResponse | null> {
+    console.log(`Searching products with query "${searchQuery}" and filters:`, filterParams);
+
+    if (this.customerRoot) {
+      try {
+        const filterQuery: string[] = ['published:true'];
+
+        if (filterParams.priceFrom !== undefined || filterParams.priceTo !== undefined) {
+          const minPrice = filterParams.priceFrom !== undefined ? Number(filterParams.priceFrom) : 0;
+          const maxPrice = filterParams.priceTo !== undefined ? Number(filterParams.priceTo) : Number.MAX_SAFE_INTEGER;
+
+          if (minPrice > 0 && maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to ${maxPrice})`);
+          } else if (minPrice > 0) {
+            filterQuery.push(`variants.price.centAmount:range(${minPrice} to *)`);
+          } else if (maxPrice < Number.MAX_SAFE_INTEGER) {
+            filterQuery.push(`variants.price.centAmount:range(* to ${maxPrice})`);
+          }
+        }
+
+        if (
+          filterParams.categoryIds &&
+          Array.isArray(filterParams.categoryIds) &&
+          filterParams.categoryIds.length > 0
+        ) {
+          // if (filterParams.categoryOperator === 'or' && filterParams.categoryIds.length > 1) {
+          //   const categoryFilter = filterParams.categoryIds
+          //     .map(catId => `categories.id:"${catId}"`)
+          //     .join(' or ');
+          //   filterQuery.push(`(${categoryFilter})`);
+          // } else {
+          //   filterParams.categoryIds.forEach(categoryId => {
+          //     filterQuery.push(`categories.id:"${categoryId}"`);
+          //   });
+          // }
+          filterParams.categoryIds.forEach((categoryId) => {
+            filterQuery.push(`categories.id:"${categoryId}"`);
+          });
+        }
+
+        console.log('Search filter query:', filterQuery);
+
+        let sort: string[] = [];
+        if (filterParams.sortBy) {
+          switch (filterParams.sortBy) {
+            case 'price-asc':
+              sort = ['price asc'];
+              break;
+            case 'price-desc':
+              sort = ['price desc'];
+              break;
+            case 'name-asc':
+              sort = ['name.en-US asc'];
+              break;
+            case 'name-desc':
+              sort = ['name.en-US desc'];
+              break;
+            default:
+              break;
+          }
+        }
+
+        const queryArgs: CommerceToolsQueryArgs = {
+          filter: filterQuery,
+          limit: 100,
+          sort: sort.length > 0 ? sort : undefined,
+        };
+
+        if (searchQuery.length <= 2) {
+          queryArgs['text.en-US'] = `${searchQuery}*`;
+        } else if (searchQuery.length <= 4) {
+          queryArgs['text.en-US'] = searchQuery;
+          queryArgs.fuzzy = true;
+          queryArgs.fuzzyLevel = 1;
+          if (searchQuery.length >= 3) {
+            queryArgs['text.en-US.exact'] = `${searchQuery}*`;
+          }
+        } else {
+          queryArgs['text.en-US'] = searchQuery;
+          queryArgs.fuzzy = true;
+          queryArgs.fuzzyLevel = 2;
+        }
+
+        console.log('Full search query parameters:', queryArgs);
+
+        const response = await this.customerRoot.productProjections().search().get({ queryArgs }).execute();
+
+        console.log('Search results:', {
+          foundBooks: response.body?.results?.map((p) => p.name['en-US']),
+          status: response.statusCode,
+          total: response.body?.total,
+        });
+        return response.body;
+      } catch (error) {
+        console.error(`Error searching products with query "${searchQuery}":`, error);
+        return null;
+      }
+    }
+    return null;
+  }
+
   public update(): void {
     const token = Cookies.get('login');
     if (token) {
       this.customerClient = createRefreshCustomerClient(token);
       this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
     }
+  }
+
+  public async updateAddress(address: _BaseAddress, addressId: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'changeAddress', address, addressId }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
+  public async updateDefaultBillingAddress(addressId: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'setDefaultBillingAddress', addressId }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
+  public async updateDefaultShippingAddress(addressId: string): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [{ action: 'setDefaultShippingAddress', addressId }],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
+  }
+
+  public async updatePersonalInfo(personalInfo: { [key: string]: string }): Promise<Customer | null> {
+    if (this.customerRoot) {
+      const customer = await this.getCustomerInfo();
+      const customerVersion = customer?.version;
+      if (customerVersion) {
+        const response = await this.customerRoot
+          .me()
+          .post({
+            body: {
+              actions: [
+                { action: 'setFirstName', firstName: personalInfo.firstName },
+                { action: 'setLastName', lastName: personalInfo.lastName },
+                { action: 'changeEmail', email: personalInfo.email },
+                { action: 'setDateOfBirth', dateOfBirth: personalInfo.dateOfBirth },
+              ],
+              version: customerVersion,
+            },
+          })
+          .execute();
+        return response.body;
+      }
+    }
+    return null;
   }
 }
 
