@@ -5,6 +5,7 @@ import myTokenCache from '@/app/api/token-cache';
 import {
   type _BaseAddress,
   type ByProjectKeyRequestBuilder,
+  type Cart,
   type Customer,
   type CustomerDraft,
   type CustomerSignInResult,
@@ -137,6 +138,80 @@ export default class CustomerClient {
     return null;
   }
 
+  // Add to cart
+  public async addToCart(productId: string, variantId = 1, quantity = 1): Promise<Cart | null> {
+    if (!this.customerRoot) {
+      return null;
+    }
+
+    try {
+      const cart = await this.getActiveCart();
+      if (!cart) {
+        return null;
+      }
+
+      const response = await this.customerRoot
+        .me()
+        .carts()
+        .withId({ ID: cart.id })
+        .post({
+          body: {
+            actions: [
+              {
+                action: 'addLineItem' as const,
+                productId,
+                quantity,
+                variantId,
+              },
+            ],
+            version: cart.version,
+          },
+        })
+        .execute();
+
+      return response.body;
+    } catch (error) {
+      console.error('Error adding product to cart:', error);
+      return null;
+    }
+  }
+
+  // Apply promocode to cart
+  public async applyDiscountCode(code: string): Promise<Cart | null> {
+    if (!this.customerRoot) {
+      return null;
+    }
+
+    try {
+      const cart = await this.getActiveCart();
+      if (!cart) {
+        return null;
+      }
+
+      const response = await this.customerRoot
+        .me()
+        .carts()
+        .withId({ ID: cart.id })
+        .post({
+          body: {
+            actions: [
+              {
+                action: 'addDiscountCode' as const,
+                code,
+              },
+            ],
+            version: cart.version,
+          },
+        })
+        .execute();
+
+      return response.body;
+    } catch (error) {
+      console.error('Error applying discount code:', error);
+      return null;
+    }
+  }
+
   public async callApi<T>(path: string, options: RequestInit = {}): Promise<T | null> {
     const url = `${this.apiUrl}${path}`;
 
@@ -205,6 +280,92 @@ export default class CustomerClient {
           })
           .execute();
         return response.body;
+      }
+    }
+    return null;
+  }
+
+  // Clear the cart
+  public async clearCart(): Promise<Cart | null> {
+    if (!this.customerRoot) {
+      return null;
+    }
+
+    try {
+      const cart = await this.getActiveCart();
+      if (!cart) {
+        return null;
+      }
+
+      const actions = cart.lineItems.map((item) => ({
+        action: 'removeLineItem' as const,
+        lineItemId: item.id,
+      }));
+
+      if (actions.length === 0) {
+        return cart;
+      }
+
+      const response = await this.customerRoot
+        .me()
+        .carts()
+        .withId({ ID: cart.id })
+        .post({
+          body: {
+            actions,
+            version: cart.version,
+          },
+        })
+        .execute();
+
+      return response.body;
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      return null;
+    }
+  }
+
+  // Create a new cart
+  public async createCart(): Promise<Cart | null> {
+    if (this.customerRoot) {
+      try {
+        const response = await this.customerRoot
+          .me()
+          .carts()
+          .post({
+            body: {
+              currency: 'USD',
+            },
+          })
+          .execute();
+        return response.body;
+      } catch (error) {
+        console.error('Error creating cart:', error);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // Get active cart
+  public async getActiveCart(): Promise<Cart | null> {
+    if (this.customerRoot) {
+      try {
+        const response = await this.customerRoot.me().activeCart().get().execute();
+        return response.body;
+      } catch (error: unknown) {
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'statusCode' in error &&
+          typeof error.statusCode === 'number' &&
+          error.statusCode === 404
+        ) {
+          console.log('No active cart found, creating a new one');
+          return this.createCart();
+        }
+        console.error('Error fetching active cart:', error);
+        return null;
       }
     }
     return null;
@@ -559,6 +720,42 @@ export default class CustomerClient {
     return null;
   }
 
+  // remove item from cart
+  public async removeFromCart(lineItemId: string): Promise<Cart | null> {
+    if (!this.customerRoot) {
+      return null;
+    }
+
+    try {
+      const cart = await this.getActiveCart();
+      if (!cart) {
+        return null;
+      }
+
+      const response = await this.customerRoot
+        .me()
+        .carts()
+        .withId({ ID: cart.id })
+        .post({
+          body: {
+            actions: [
+              {
+                action: 'removeLineItem' as const,
+                lineItemId,
+              },
+            ],
+            version: cart.version,
+          },
+        })
+        .execute();
+
+      return response.body;
+    } catch (error) {
+      console.error('Error removing line item from cart:', error);
+      return null;
+    }
+  }
+
   public async searchProducts(
     searchQuery: string,
     filterParams: Record<string, unknown> = {},
@@ -689,6 +886,43 @@ export default class CustomerClient {
       }
     }
     return null;
+  }
+
+  // Update cart item quantity
+  public async updateCartItemQuantity(lineItemId: string, quantity: number): Promise<Cart | null> {
+    if (!this.customerRoot) {
+      return null;
+    }
+
+    try {
+      const cart = await this.getActiveCart();
+      if (!cart) {
+        return null;
+      }
+
+      const response = await this.customerRoot
+        .me()
+        .carts()
+        .withId({ ID: cart.id })
+        .post({
+          body: {
+            actions: [
+              {
+                action: 'changeLineItemQuantity' as const,
+                lineItemId,
+                quantity,
+              },
+            ],
+            version: cart.version,
+          },
+        })
+        .execute();
+
+      return response.body;
+    } catch (error) {
+      console.error('Error updating cart item quantity:', error);
+      return null;
+    }
   }
 
   public async updateDefaultBillingAddress(addressId: string): Promise<Customer | null> {
