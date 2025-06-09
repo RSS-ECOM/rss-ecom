@@ -263,6 +263,7 @@ export default function PersonalInfoForm(props: propsType): JSX.Element | null {
           <DialogTitle>Edit profile</DialogTitle>
           <DialogDescription>Make changes to your profile here. Click save when you&apos;re done.</DialogDescription>
         </DialogHeader>
+        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
         <form className="grid gap-4 py-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="col-span-4" htmlFor="email">

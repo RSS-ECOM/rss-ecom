@@ -148,6 +148,7 @@ export default function ChangePasswordForm(props: propsType): JSX.Element | null
           <DialogTitle>Change password</DialogTitle>
           <DialogDescription>You can change password here</DialogDescription>
         </DialogHeader>
+        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
         <form className="grid gap-4 py-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="col-span-4" htmlFor="current-password">

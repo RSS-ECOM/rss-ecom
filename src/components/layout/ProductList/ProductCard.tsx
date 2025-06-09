@@ -2,8 +2,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast'; // Fix import from correct location
+import { useCart } from '@/components/cart/CartContext';
+import { useCustomerClient } from '@/lib/customer-client';
 import { cn } from '@/lib/utils';
 import { type ProductProjection } from '@commercetools/platform-sdk';
+import { Check, Loader2, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -51,8 +55,15 @@ const getLocalizedText = (localizedObject: LocalizedString | null | string | und
 
   return defaultText;
 };
+
+// eslint-disable-next-line max-lines-per-function
 export default function ProductCard({ className, formatPrice, product }: ProductCardProps): JSX.Element {
   const [isHovered, setIsHovered] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddedToCart, setIsAddedToCart] = useState(false);
+  const { customerClient } = useCustomerClient();
+  const { refreshCart } = useCart();
+  const { toast } = useToast();
 
   const { prices = [] } = product.masterVariant;
 
@@ -100,6 +111,7 @@ export default function ProductCard({ className, formatPrice, product }: Product
       discountedPrice = price.discounted.value.centAmount;
     }
   }
+
   let pageCount = '';
   const pageCountAttr = product.masterVariant.attributes?.find((attr) => attr.name === 'pageCount');
 
@@ -113,8 +125,98 @@ export default function ProductCard({ className, formatPrice, product }: Product
     }
   }
 
+  const handleAddToCartAsync = async (): Promise<void> => {
+    if (!customerClient) {
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      const result = await customerClient.addToCart(product.id, 1, 1);
+
+      if (result) {
+        setIsAddedToCart(true);
+        await refreshCart(); // Update cart data in context
+
+        toast({
+          description: `${getLocalizedText(product.name, 'Untitled Book')} has been added to your cart.`,
+          duration: 3000,
+          title: 'Added to cart',
+        });
+
+        setTimeout(() => {
+          setIsAddedToCart(false);
+        }, 2000);
+      } else {
+        toast({
+          description: 'Could not add item to cart. Please try again.',
+          title: 'Error',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        description: 'Could not add item to cart. Please try again.',
+        title: 'Error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent): void => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isAddingToCart || isAddedToCart || !customerClient) {
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    handleAddToCartAsync();
+  };
+
+  const getBuyButtonClass = (): string => {
+    if (isHovered) {
+      return 'bg-amber-600 hover:bg-amber-700 shadow-md';
+    }
+    if (isAddedToCart) {
+      return 'bg-green-600 hover:bg-green-700';
+    }
+    return 'bg-primary hover:bg-primary/90';
+  };
+
+  const getButtonContent = (): JSX.Element => {
+    if (isAddingToCart) {
+      return (
+        <>
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          Adding...
+        </>
+      );
+    }
+
+    if (isAddedToCart) {
+      return (
+        <>
+          <Check className="h-4 w-4 mr-2" />
+          Added
+        </>
+      );
+    }
+
+    return (
+      <>
+        <ShoppingCart className="h-4 w-4 mr-2" />
+        Buy
+      </>
+    );
+  };
+
   return (
-    <Link className="block h-full" href={`/products/${product.id}`}>
+    <div className="block h-full">
       <Card
         className={cn(
           'overflow-hidden flex flex-col h-full transition-all duration-300',
@@ -125,59 +227,63 @@ export default function ProductCard({ className, formatPrice, product }: Product
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="aspect-[3/4] relative bg-muted overflow-hidden">
-          {product.masterVariant.images && product.masterVariant.images.length > 0 ? (
-            <Image
-              alt={getLocalizedText(product.name, '')}
-              className={`object-cover transition-transform duration-300 ${isHovered ? 'scale-110' : 'scale-100'}`}
-              fill
-              src={product.masterVariant.images[0].url}
-            />
-          ) : (
-            <div className="h-full w-full flex items-center justify-center">
-              <p className="text-muted-foreground">No image available</p>
-            </div>
-          )}
+          <Link href={`/products/${product.id}`}>
+            {product.masterVariant.images && product.masterVariant.images.length > 0 ? (
+              <Image
+                alt={getLocalizedText(product.name, '')}
+                className={`object-cover transition-transform duration-300 ${isHovered ? 'scale-110' : 'scale-100'}`}
+                fill
+                src={product.masterVariant.images[0].url}
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center">
+                <p className="text-muted-foreground">No image available</p>
+              </div>
+            )}
 
-          {/* Sale badge */}
-          {hasDiscount && (
-            <div
-              className={`absolute top-2 right-2 bg-destructive text-white px-3 py-1 rounded-md 
-                          text-xs font-semibold transition-transform duration-300 ${
-                            isHovered ? 'scale-110' : 'scale-100'
-                          }`}
-            >
-              Sale
-            </div>
-          )}
+            {/* Sale badge */}
+            {hasDiscount && (
+              <div
+                className={`absolute top-2 right-2 bg-destructive text-white px-3 py-1 rounded-md 
+                            text-xs font-semibold transition-transform duration-300 ${
+                              isHovered ? 'scale-110' : 'scale-100'
+                            }`}
+              >
+                Sale
+              </div>
+            )}
+          </Link>
         </div>
 
         <CardHeader className={`p-4 flex-grow transition-colors duration-300 ${isHovered ? 'bg-secondary/20' : ''}`}>
-          <CardTitle className="text-lg h-12 line-clamp-2 mb-2">
-            {getLocalizedText(product.name, 'Untitled Book')}
-          </CardTitle>
+          <Link href={`/products/${product.id}`}>
+            <CardTitle className="text-lg h-12 line-clamp-2 mb-2">
+              {getLocalizedText(product.name, 'Untitled Book')}
+            </CardTitle>
 
-          {/* Add author information */}
-          {((): JSX.Element | null => {
-            const authorAttr = product.masterVariant.attributes?.find((attr) => attr.name === 'author');
-            if (!authorAttr?.value) {
-              return null;
-            }
+            {/* Add author information */}
+            {((): JSX.Element | null => {
+              const authorAttr = product.masterVariant.attributes?.find((attr) => attr.name === 'author');
+              if (!authorAttr?.value) {
+                return null;
+              }
 
-            let authorText = '';
-            if (typeof authorAttr.value === 'string') {
-              authorText = authorAttr.value;
-            } else if (isLocalizedString(authorAttr.value)) {
-              authorText = getLocalizedText(authorAttr.value, '');
-            } else {
-              authorText = String(authorAttr.value);
-            }
+              let authorText = '';
+              if (typeof authorAttr.value === 'string') {
+                authorText = authorAttr.value;
+              } else if (isLocalizedString(authorAttr.value)) {
+                authorText = getLocalizedText(authorAttr.value, '');
+              } else {
+                authorText = String(authorAttr.value);
+              }
 
-            return <div className="h-9 text-sm text-muted-foreground mb-2">by {authorText}</div>;
-          })()}
+              return <div className="h-9 text-sm text-muted-foreground mb-2">by {authorText}</div>;
+            })()}
 
-          <CardDescription className="h-18 line-clamp-3 mb-4">
-            {getLocalizedText(product.description, 'No description available')}
-          </CardDescription>
+            <CardDescription className="h-18 line-clamp-3 mb-4">
+              {getLocalizedText(product.description, 'No description available')}
+            </CardDescription>
+          </Link>
 
           <div className="flex flex-col gap-1 h-16">
             {pageCount && <div className="text-sm text-muted-foreground">Pages: {pageCount}</div>}
@@ -205,32 +311,28 @@ export default function ProductCard({ className, formatPrice, product }: Product
 
         <CardFooter className={`p-4 pt-0 mt-auto transition-colors duration-300 ${isHovered ? 'bg-secondary/20' : ''}`}>
           <div className="grid grid-cols-2 gap-2 w-full">
+            <Link href={`/products/${product.id}`}>
+              <Button
+                className={`font-medium transition-all duration-300 w-full ${
+                  isHovered
+                    ? 'bg-amber-800/20 hover:bg-amber-400/30 text-foreground border-amber-500'
+                    : 'border-amber-500/70 hover:bg-amber-500/30 hover:border-amber-500 dark:bg-amber-800/50'
+                }`}
+                variant="outline"
+              >
+                Details
+              </Button>
+            </Link>
             <Button
-              className={`font-medium transition-all duration-300 ${
-                isHovered
-                  ? 'bg-amber-800/20 hover:bg-amber-400/30 text-foreground border-amber-500'
-                  : 'border-amber-500/70 hover:bg-amber-500/30 hover:border-amber-500 dark:bg-amber-800/50'
-              }`}
-              //         onClick={(e) => {
-              //   e.preventDefault();
-              //   e.stopPropagation();
-              //   // window.location.href = `/products/${product.id}`;
-              // }}
-              variant="outline"
+              className={`font-medium transition-transform duration-300 w-full ${getBuyButtonClass()}`}
+              disabled={isAddingToCart || isAddedToCart}
+              onClick={handleAddToCart}
             >
-              Details {/* <Link href={`/products/${product.id}`}>Details</Link> */}
-            </Button>
-            <Button
-              className={`font-medium transition-transform duration-300 ${
-                isHovered ? 'bg-amber-600 hover:bg-amber-700 shadow-md' : 'bg-primary hover:bg-primary/90'
-              }`}
-              disabled={true}
-            >
-              Buy
+              {getButtonContent()}
             </Button>
           </div>
         </CardFooter>
       </Card>
-    </Link>
+    </div>
   );
 }

@@ -99,6 +99,7 @@ export default function CustomerInfo(): JSX.Element {
     <Card className="group/editAddress relative w-full mb-8" key={address.id}>
       <button
         className="opacity-0 group-hover/editAddress:opacity-100 transition-opacity absolute top-2 right-10"
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onClick={() => handleDeleteClick(address.id ? address.id : '')}
       >
         <Trash2 className="h-5 w-5"></Trash2>

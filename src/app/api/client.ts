@@ -16,7 +16,13 @@ import {
 } from '@commercetools/platform-sdk';
 import Cookies from 'js-cookie';
 
-import { createCtpClient, createCustomerClient, createRefreshCustomerClient, projectKey } from './client-builder';
+import {
+  createAnonymousClient,
+  createCtpClient,
+  createCustomerClient,
+  createRefreshCustomerClient,
+  projectKey,
+} from './client-builder';
 
 interface JwtPayload {
   [key: string]: unknown;
@@ -72,7 +78,21 @@ function isApiResponse(obj: unknown): obj is ApiResponse {
   return typeof obj === 'object' && obj !== null;
 }
 
+function isErrorWithStatusCode(error: unknown): error is { statusCode: number } {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const statusCodeDescriptor = Object.getOwnPropertyDescriptor(error, 'statusCode');
+
+  return statusCodeDescriptor !== undefined && typeof statusCodeDescriptor.value === 'number';
+}
+
 export default class CustomerClient {
+  private anonymousClient: Client | null = null;
+
+  private anonymousRoot: ByProjectKeyRequestBuilder | null = null;
+
   private apiUrl = `https://api.europe-west1.gcp.commercetools.com/${projectKey}`;
 
   private ctpClient: Client;
@@ -81,16 +101,30 @@ export default class CustomerClient {
 
   private customerRoot: ByProjectKeyRequestBuilder | null = null;
 
+  private isAnonymousMode = false;
+
   constructor() {
     this.ctpClient = createCtpClient();
 
     this.customerClient = createCtpClient();
-    this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
+    if (this.customerClient) {
+      this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
+    }
+
+    this.anonymousClient = createAnonymousClient();
+    if (this.anonymousClient) {
+      this.anonymousRoot = createApiBuilderFromCtpClient(this.anonymousClient).withProjectKey({ projectKey });
+    }
 
     const token = Cookies.get('login');
     if (token) {
       this.customerClient = createRefreshCustomerClient(token);
-      this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
+      if (this.customerClient) {
+        this.customerRoot = createApiBuilderFromCtpClient(this.customerClient).withProjectKey({ projectKey });
+      }
+      this.isAnonymousMode = false;
+    } else {
+      this.isAnonymousMode = true;
     }
   }
 
@@ -140,7 +174,9 @@ export default class CustomerClient {
 
   // Add to cart
   public async addToCart(productId: string, variantId = 1, quantity = 1): Promise<Cart | null> {
-    if (!this.customerRoot) {
+    const root = this.isAnonymousMode ? this.anonymousRoot : this.customerRoot;
+
+    if (!root) {
       return null;
     }
 
@@ -150,24 +186,46 @@ export default class CustomerClient {
         return null;
       }
 
-      const response = await this.customerRoot
-        .me()
-        .carts()
-        .withId({ ID: cart.id })
-        .post({
-          body: {
-            actions: [
-              {
-                action: 'addLineItem' as const,
-                productId,
-                quantity,
-                variantId,
-              },
-            ],
-            version: cart.version,
-          },
-        })
-        .execute();
+      let response;
+
+      if (this.isAnonymousMode) {
+        response = await root
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions: [
+                {
+                  action: 'addLineItem' as const,
+                  productId,
+                  quantity,
+                  variantId,
+                },
+              ],
+              version: cart.version,
+            },
+          })
+          .execute();
+      } else {
+        response = await root
+          .me()
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions: [
+                {
+                  action: 'addLineItem' as const,
+                  productId,
+                  quantity,
+                  variantId,
+                },
+              ],
+              version: cart.version,
+            },
+          })
+          .execute();
+      }
 
       return response.body;
     } catch (error) {
@@ -178,7 +236,9 @@ export default class CustomerClient {
 
   // Apply promocode to cart
   public async applyDiscountCode(code: string): Promise<Cart | null> {
-    if (!this.customerRoot) {
+    const root = this.isAnonymousMode ? this.anonymousRoot : this.customerRoot;
+
+    if (!root) {
       return null;
     }
 
@@ -188,22 +248,42 @@ export default class CustomerClient {
         return null;
       }
 
-      const response = await this.customerRoot
-        .me()
-        .carts()
-        .withId({ ID: cart.id })
-        .post({
-          body: {
-            actions: [
-              {
-                action: 'addDiscountCode' as const,
-                code,
-              },
-            ],
-            version: cart.version,
-          },
-        })
-        .execute();
+      let response;
+
+      if (this.isAnonymousMode) {
+        response = await root
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions: [
+                {
+                  action: 'addDiscountCode' as const,
+                  code,
+                },
+              ],
+              version: cart.version,
+            },
+          })
+          .execute();
+      } else {
+        response = await root
+          .me()
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions: [
+                {
+                  action: 'addDiscountCode' as const,
+                  code,
+                },
+              ],
+              version: cart.version,
+            },
+          })
+          .execute();
+      }
 
       return response.body;
     } catch (error) {
@@ -287,7 +367,9 @@ export default class CustomerClient {
 
   // Clear the cart
   public async clearCart(): Promise<Cart | null> {
-    if (!this.customerRoot) {
+    const root = this.isAnonymousMode ? this.anonymousRoot : this.customerRoot;
+
+    if (!root) {
       return null;
     }
 
@@ -306,17 +388,32 @@ export default class CustomerClient {
         return cart;
       }
 
-      const response = await this.customerRoot
-        .me()
-        .carts()
-        .withId({ ID: cart.id })
-        .post({
-          body: {
-            actions,
-            version: cart.version,
-          },
-        })
-        .execute();
+      let response;
+
+      if (this.isAnonymousMode) {
+        response = await root
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions,
+              version: cart.version,
+            },
+          })
+          .execute();
+      } else {
+        response = await root
+          .me()
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions,
+              version: cart.version,
+            },
+          })
+          .execute();
+      }
 
       return response.body;
     } catch (error) {
@@ -327,9 +424,54 @@ export default class CustomerClient {
 
   // Create a new cart
   public async createCart(): Promise<Cart | null> {
-    if (this.customerRoot) {
-      try {
-        const response = await this.customerRoot
+    const root = this.isAnonymousMode ? this.anonymousRoot : this.customerRoot;
+
+    if (!root) {
+      return null;
+    }
+
+    try {
+      let response;
+
+      if (this.isAnonymousMode) {
+        try {
+          response = await root
+            .carts()
+            .post({
+              body: {
+                currency: 'USD',
+              },
+            })
+            .execute();
+
+          if (response.body && response.body.id) {
+            Cookies.set('cartId', response.body.id, { expires: 30 });
+          }
+        } catch (error) {
+          console.error('Failed to create anonymous cart:', error);
+          if (
+            error instanceof Error &&
+            (error.message.includes('invalid_scope') || error.message.includes('insufficient_scope'))
+          ) {
+            console.log('Regenerating anonymous client due to auth issues');
+            this.anonymousClient = createAnonymousClient();
+            if (this.anonymousClient) {
+              this.anonymousRoot = createApiBuilderFromCtpClient(this.anonymousClient).withProjectKey({ projectKey });
+              response = await this.anonymousRoot
+                .carts()
+                .post({
+                  body: { currency: 'USD' },
+                })
+                .execute();
+
+              if (response.body && response.body.id) {
+                Cookies.set('cartId', response.body.id, { expires: 30 });
+              }
+            }
+          }
+        }
+      } else {
+        response = await root
           .me()
           .carts()
           .post({
@@ -338,37 +480,79 @@ export default class CustomerClient {
             },
           })
           .execute();
-        return response.body;
-      } catch (error) {
-        console.error('Error creating cart:', error);
-        return null;
       }
+
+      return response?.body || null;
+    } catch (error) {
+      console.error('Error creating cart:', error);
+      return null;
     }
-    return null;
   }
 
   // Get active cart
   public async getActiveCart(): Promise<Cart | null> {
-    if (this.customerRoot) {
-      try {
-        const response = await this.customerRoot.me().activeCart().get().execute();
-        return response.body;
-      } catch (error: unknown) {
-        if (
-          typeof error === 'object' &&
-          error !== null &&
-          'statusCode' in error &&
-          typeof error.statusCode === 'number' &&
-          error.statusCode === 404
-        ) {
-          console.log('No active cart found, creating a new one');
+    const root = this.isAnonymousMode ? this.anonymousRoot : this.customerRoot;
+    const cartId = Cookies.get('cartId');
+
+    if (!root) {
+      return null;
+    }
+
+    try {
+      // anonymous users with stored cart ID
+      if (this.isAnonymousMode && cartId) {
+        try {
+          const response = await root.carts().withId({ ID: cartId }).get().execute();
+          return response.body;
+        } catch (error) {
+          console.log('Stored cart ID no longer valid, creating new anonymous cart');
+          Cookies.remove('cartId');
           return this.createCart();
         }
-        console.error('Error fetching active cart:', error);
-        return null;
       }
+
+      try {
+        if (this.isAnonymousMode) {
+          return this.createCart();
+        }
+
+        const response = await root.me().activeCart().get().execute();
+        return response.body;
+      } catch (error) {
+        if (isErrorWithStatusCode(error)) {
+          if ((error.statusCode === 400 || error.statusCode === 403) && this.isAnonymousMode) {
+            console.log('Authentication error for anonymous user, creating a new cart');
+            return this.createCart();
+          }
+
+          if (error.statusCode === 404) {
+            console.log('No active cart found, creating a new one');
+            return this.createCart();
+          }
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error getting active cart:', error);
+
+      if (
+        this.isAnonymousMode &&
+        error instanceof Error &&
+        (error.message.includes('invalid_scope') ||
+          error.message.includes('insufficient_scope') ||
+          error.message.includes('Permissions exceeded'))
+      ) {
+        console.log('Attempting to create a new cart due to auth error');
+        try {
+          return this.createCart();
+        } catch (createErr) {
+          console.error('Failed to create new cart after auth error:', createErr);
+          return null;
+        }
+      }
+
+      return null;
     }
-    return null;
   }
 
   public async getCustomerInfo(): Promise<Customer | null> {
@@ -722,7 +906,9 @@ export default class CustomerClient {
 
   // remove item from cart
   public async removeFromCart(lineItemId: string): Promise<Cart | null> {
-    if (!this.customerRoot) {
+    const root = this.isAnonymousMode ? this.anonymousRoot : this.customerRoot;
+
+    if (!root) {
       return null;
     }
 
@@ -732,22 +918,42 @@ export default class CustomerClient {
         return null;
       }
 
-      const response = await this.customerRoot
-        .me()
-        .carts()
-        .withId({ ID: cart.id })
-        .post({
-          body: {
-            actions: [
-              {
-                action: 'removeLineItem' as const,
-                lineItemId,
-              },
-            ],
-            version: cart.version,
-          },
-        })
-        .execute();
+      let response;
+
+      if (this.isAnonymousMode) {
+        response = await root
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions: [
+                {
+                  action: 'removeLineItem' as const,
+                  lineItemId,
+                },
+              ],
+              version: cart.version,
+            },
+          })
+          .execute();
+      } else {
+        response = await root
+          .me()
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions: [
+                {
+                  action: 'removeLineItem' as const,
+                  lineItemId,
+                },
+              ],
+              version: cart.version,
+            },
+          })
+          .execute();
+      }
 
       return response.body;
     } catch (error) {
@@ -890,7 +1096,9 @@ export default class CustomerClient {
 
   // Update cart item quantity
   public async updateCartItemQuantity(lineItemId: string, quantity: number): Promise<Cart | null> {
-    if (!this.customerRoot) {
+    const root = this.isAnonymousMode ? this.anonymousRoot : this.customerRoot;
+
+    if (!root) {
       return null;
     }
 
@@ -900,23 +1108,44 @@ export default class CustomerClient {
         return null;
       }
 
-      const response = await this.customerRoot
-        .me()
-        .carts()
-        .withId({ ID: cart.id })
-        .post({
-          body: {
-            actions: [
-              {
-                action: 'changeLineItemQuantity' as const,
-                lineItemId,
-                quantity,
-              },
-            ],
-            version: cart.version,
-          },
-        })
-        .execute();
+      let response;
+
+      if (this.isAnonymousMode) {
+        response = await root
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions: [
+                {
+                  action: 'changeLineItemQuantity' as const,
+                  lineItemId,
+                  quantity,
+                },
+              ],
+              version: cart.version,
+            },
+          })
+          .execute();
+      } else {
+        response = await root
+          .me()
+          .carts()
+          .withId({ ID: cart.id })
+          .post({
+            body: {
+              actions: [
+                {
+                  action: 'changeLineItemQuantity' as const,
+                  lineItemId,
+                  quantity,
+                },
+              ],
+              version: cart.version,
+            },
+          })
+          .execute();
+      }
 
       return response.body;
     } catch (error) {
