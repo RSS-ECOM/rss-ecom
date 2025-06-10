@@ -3,20 +3,94 @@
 import type { BreadcrumbItemProps } from '@/components/layout/Nav/Breadcrumbs';
 
 import { categories } from '@/app/data/categories';
+import { useCart } from '@/components/cart/CartContext';
 import Breadcrumbs from '@/components/layout/Nav/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { type CarouselApi } from '@/components/ui/carousel';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useProduct } from '@/hooks/use-product';
+import { useToast } from '@/hooks/use-toast';
+import { useCustomerClient } from '@/lib/customer-client';
+import { Check, Loader2, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+interface LocalizedString {
+  [locale: string]: string;
+}
+
+const getLocalizedText = (localizedObject: LocalizedString | null | string | undefined, defaultText = ''): string => {
+  if (!localizedObject) {
+    return defaultText;
+  }
+
+  if (typeof localizedObject === 'string') {
+    return localizedObject;
+  }
+
+  if ('en-US' in localizedObject) {
+    return localizedObject['en-US'];
+  }
+
+  const keys = Object.keys(localizedObject);
+  // eslint-disable-next-line no-restricted-syntax
+  for (const key of keys) {
+    if (typeof localizedObject[key] === 'string') {
+      return localizedObject[key];
+    }
+  }
+
+  return defaultText;
+};
+
+const getBuyButtonClass = (isAddedToCart: boolean): string => {
+  if (isAddedToCart) {
+    return 'bg-green-600 hover:bg-green-700';
+  }
+  return 'bg-primary hover:bg-primary/90';
+};
+
+const getButtonContent = (isAddingToCart: boolean, isAddedToCart: boolean): JSX.Element => {
+  if (isAddingToCart) {
+    return (
+      <>
+        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        Adding...
+      </>
+    );
+  }
+
+  if (isAddedToCart) {
+    return (
+      <>
+        <Check className="h-4 w-4 mr-2" />
+        Added
+      </>
+    );
+  }
+
+  return (
+    <>
+      <ShoppingCart className="h-4 w-4 mr-2" />
+      Buy
+    </>
+  );
+};
+
+// eslint-disable-next-line max-lines-per-function
 export default function ProductPage({ params }: { params: { id: string } }): JSX.Element {
   const [api, setApi] = useState<CarouselApi>();
   const [, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddedToCart, setIsAddedToCart] = useState(false);
+  const { customerClient } = useCustomerClient();
+  const { cart, refreshCart } = useCart();
+  const { toast } = useToast();
+
+  const { id } = params;
 
   useEffect(() => {
     if (!api) {
@@ -29,9 +103,8 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
     api.on('select', () => {
       setCurrent(api.selectedScrollSnap() + 1);
     });
-  }, [api]);
-
-  const { id } = params;
+    setIsAddedToCart(cart?.lineItems.some((item) => item.productId === id) ?? false);
+  }, [api, cart?.lineItems, id]);
 
   const { data: product, error, isLoading } = useProduct(id);
 
@@ -69,6 +142,55 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
   if (isLoading) {
     return <div className="container mx-auto px-4 py-8">Loading...</div>;
   }
+
+  const handleAddToCartAsync = async (): Promise<void> => {
+    if (!customerClient) {
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      const result = await customerClient.addToCart(product?.id ? product.id : '', 1, 1);
+
+      if (result) {
+        setIsAddedToCart(true);
+        await refreshCart(); // Update cart data in context
+
+        toast({
+          description: `${getLocalizedText(product?.name ? product.name : '', 'Untitled Book')} has been added to your cart.`,
+          duration: 3000,
+          title: 'Added to cart',
+        });
+      } else {
+        toast({
+          description: 'Could not add item to cart. Please try again.',
+          title: 'Error',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        description: 'Could not add item to cart. Please try again.',
+        title: 'Error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent): void => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isAddingToCart || isAddedToCart || !customerClient) {
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    handleAddToCartAsync();
+  };
 
   if (error) {
     return <div className="container mx-auto px-4 py-8">Error loading product</div>;
@@ -148,7 +270,13 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
                   <span className="text-lg bold">{price} $</span>
                 </div>
               ))}
-            <Button className="w-80">Add to Cart</Button>
+            <Button
+              className={`w-80 ${getBuyButtonClass(isAddedToCart)}`}
+              disabled={isAddedToCart || isAddingToCart}
+              onClick={handleAddToCart}
+            >
+              {getButtonContent(isAddingToCart, isAddedToCart)}
+            </Button>
           </div>
         </div>
 
