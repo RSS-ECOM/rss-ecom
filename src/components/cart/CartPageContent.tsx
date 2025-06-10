@@ -4,6 +4,7 @@ import { useCart } from '@/components/cart/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCustomerClient } from '@/lib/customer-client';
 import { TrashIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -18,6 +19,7 @@ const formatPrice = (amount: number, currency = 'USD'): string =>
 export default function CartPageContent(): JSX.Element {
   const { cart, loading, refreshCart } = useCart();
   const [isRemoving, setIsRemoving] = useState<Record<string, boolean>>({});
+  const { customerClient } = useCustomerClient();
 
   useEffect(() => {
     refreshCart().catch(console.error);
@@ -26,9 +28,6 @@ export default function CartPageContent(): JSX.Element {
   const handleRemoveItem = async (lineItemId: string): Promise<void> => {
     setIsRemoving((prev) => ({ ...prev, [lineItemId]: true }));
     try {
-      const { customerClient } = await import('@/lib/customer-client').then((module) => ({
-        customerClient: module.useCustomerClient().customerClient,
-      }));
       if (customerClient) {
         await customerClient.removeFromCart(lineItemId);
         await refreshCart();
