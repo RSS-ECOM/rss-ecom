@@ -2,13 +2,15 @@
 
 import { useCart } from '@/components/cart/CartContext';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomerClient } from '@/lib/customer-client';
 import { TrashIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+
+import { Input } from '../ui/input';
 
 const formatPrice = (amount: number, currency = 'USD'): string =>
   new Intl.NumberFormat('en-US', {
@@ -20,6 +22,9 @@ export default function CartPageContent(): JSX.Element {
   const { cart, loading, refreshCart } = useCart();
   const [isRemoving, setIsRemoving] = useState<Record<string, boolean>>({});
   const { customerClient } = useCustomerClient();
+  const [promocode, setPromocode] = useState('');
+  const [discountedPrice, setDiscountedPrice] = useState(0);
+  const [discount, setDiscount] = useState(0);
 
   useEffect(() => {
     refreshCart().catch(console.error);
@@ -76,11 +81,37 @@ export default function CartPageContent(): JSX.Element {
     return sum + price * item.quantity;
   }, 0);
 
+  async function handleActivateCode(code: string): Promise<void> {
+    try {
+      const response = await customerClient.applyDiscountCode(code);
+      if (response?.discountOnTotalPrice?.discountedAmount.centAmount) {
+        setDiscount(response?.discountOnTotalPrice?.discountedAmount.centAmount);
+        console.log(discount);
+      }
+      if (response?.totalPrice.centAmount) {
+        setDiscountedPrice(response?.totalPrice.centAmount);
+        console.log(discountedPrice);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <Card className="col-span-2">
+          <CardHeader>
+            <CardTitle>Promo code</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between">
+              <Input className="w-1/2" onChange={(e) => setPromocode(e.target.value)}></Input>
+              <Button onClick={() => handleActivateCode(promocode)}>Activate code</Button>
+            </div>
+          </CardContent>
+        </Card>
         <div className="md:col-span-2 space-y-4">
           {cart.lineItems.map((item) => {
             const productName = item.name['en-US'] || 'Untitled Product';
@@ -109,7 +140,6 @@ export default function CartPageContent(): JSX.Element {
 
                   <div className="font-medium mt-2">{formatPrice(totalPrice)}</div>
                 </div>
-
                 <Button
                   disabled={isRemoving[item.id]}
                   // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -127,18 +157,33 @@ export default function CartPageContent(): JSX.Element {
         <div>
           <Card className="p-6">
             <h2 className="text-xl font-medium mb-4">Order Summary</h2>
-
             <div className="space-y-2 mb-6">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
+              {discountedPrice ? (
+                <div className="flex justify-between">
+                  <span>Discount</span>
+                  <span>{formatPrice(discount)}</span>
+                </div>
+              ) : (
+                ''
+              )}
             </div>
 
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
               <span>{formatPrice(subtotal)}</span>
             </div>
+            {discountedPrice ? (
+              <div className="flex justify-between font-bold text-lg">
+                <span>Discounted price</span>
+                <span>{formatPrice(discountedPrice)}</span>
+              </div>
+            ) : (
+              ''
+            )}
 
             <Button className="w-full mt-6">Proceed to Checkout</Button>
 
