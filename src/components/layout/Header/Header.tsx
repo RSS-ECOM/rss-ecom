@@ -145,14 +145,13 @@ export default function Header(): JSX.Element {
           </Button>
 
           <nav className="flex items-center space-x-1">
+            <Link href="/cart">
+              <Button aria-label="Shopping Cart" size="icon" variant="ghost">
+                <ShoppingCart className="h-5 w-5" />
+              </Button>
+            </Link>
             {isLoggedIn ? (
               <>
-                <Link href="/cart">
-                  <Button aria-label="Shopping Cart" size="icon" variant="ghost">
-                    <ShoppingCart className="h-5 w-5" />
-                  </Button>
-                </Link>
-
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button aria-label="User Account" size="icon" variant="ghost">

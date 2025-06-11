@@ -72,6 +72,7 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.56.3",
+    "react-intersection-observer": "^9.16.0",
     "sass": "^1.85.0",
     "sphere-node-product-csv-sync": "^4.8.0",
     "sphere-node-sdk": "^3.2.2",

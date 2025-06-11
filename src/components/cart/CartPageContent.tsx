@@ -69,7 +69,7 @@ export default function CartPageContent(): JSX.Element {
       <div className="container mx-auto py-10 text-center">
         <h1 className="text-3xl font-bold mb-6">Your Cart is Empty</h1>
         <p className="mb-6 text-muted-foreground">Start shopping to add items to your cart.</p>
-        <Link href="/">
+        <Link href="/products">
           <Button>Continue Shopping</Button>
         </Link>
       </div>
@@ -110,6 +110,7 @@ export default function CartPageContent(): JSX.Element {
     <div className="container mx-auto py-10">
       <div className="flex justify-between">
         <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
         <Button onClick={() => handleClearCartClick()}>Clear Cart</Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -120,6 +121,7 @@ export default function CartPageContent(): JSX.Element {
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <Input className="w-1/2" onChange={(e) => setPromocode(e.target.value)}></Input>
+              {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
               <Button onClick={() => handleActivateCode(promocode)}>Activate code</Button>
             </div>
           </CardContent>
