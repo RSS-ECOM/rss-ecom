@@ -697,7 +697,8 @@ export default class CustomerClient {
           .get({
             queryArgs: {
               filter: filterQuery,
-              limit: 100,
+              limit: filterParams.limit ? Number(filterParams.limit) : 6,
+              offset: filterParams.offset ? Number(filterParams.offset) : 0,
               sort: sort.length > 0 ? sort : undefined,
             },
           })
@@ -784,7 +785,8 @@ export default class CustomerClient {
           .get({
             queryArgs: {
               filter: filterQuery,
-              limit: 100,
+              limit: filterParams.limit ? Number(filterParams.limit) : 6,
+              offset: filterParams.offset ? Number(filterParams.offset) : 0,
               sort: sort.length > 0 ? sort : undefined,
             },
           })
@@ -1029,7 +1031,8 @@ export default class CustomerClient {
 
         const queryArgs: CommerceToolsQueryArgs = {
           filter: filterQuery,
-          limit: 100,
+          limit: filterParams.limit ? Number(filterParams.limit) : 6,
+          offset: filterParams.offset ? Number(filterParams.offset) : 0,
           sort: sort.length > 0 ? sort : undefined,
         };
 

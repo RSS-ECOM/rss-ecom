@@ -79,7 +79,7 @@ export default function Footer(): JSX.Element {
                   <CustomLink href="/sale">Sale</CustomLink>
                 </li>
                 <li>
-                  <CustomLink href="/cart">Shopping Cart</CustomLink>
+                  <CustomLink href="/cart">Cart</CustomLink>
                 </li>
               </ul>
             </div>
@@ -90,9 +90,9 @@ export default function Footer(): JSX.Element {
                 <li>
                   <CustomLink href="/about">About Us</CustomLink>
                 </li>
-                <li>
+                {/* <li>
                   <CustomLink href="/events">Blog</CustomLink>
-                </li>
+                </li> */}
                 <li>
                   <CustomLink href="/policy">Privacy Policy</CustomLink>
                 </li>

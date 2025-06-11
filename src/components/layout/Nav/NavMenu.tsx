@@ -158,7 +158,7 @@ function NavMenu(): React.JSX.Element {
           </Link>
         </NavigationMenuItem>
 
-        <NavigationMenuItem className="relative group/blog">
+        {/* <NavigationMenuItem className="relative group/blog">
           <Link href="/blog" legacyBehavior passHref>
             <NavigationMenuLink className={clearNavigationMenuLinkStyle}>
               Blog
@@ -171,7 +171,7 @@ function NavMenu(): React.JSX.Element {
               />
             </NavigationMenuLink>
           </Link>
-        </NavigationMenuItem>
+        </NavigationMenuItem> */}
 
         <NavigationMenuItem className="relative group/about">
           <Link href="/about" legacyBehavior passHref>

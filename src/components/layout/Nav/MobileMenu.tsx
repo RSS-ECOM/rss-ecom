@@ -141,11 +141,12 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
           <MobileNavLink href="/sale">Sale</MobileNavLink>
           <MobileNavLink href="/about">About</MobileNavLink>
           <MobileNavLink href="/contacts">Contact Us</MobileNavLink>
+          <MobileNavLink href="/cart">Cart</MobileNavLink>
 
           {isLoggedIn ? (
             <>
               <MobileNavLink href="/account">My Account</MobileNavLink>
-              <MobileNavLink href="/account/orders">My Orders</MobileNavLink>
+              {/* <MobileNavLink href="/account/orders">My Orders</MobileNavLink> */}
               <MobileLogoutButton />
             </>
           ) : (
