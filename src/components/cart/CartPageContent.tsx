@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomerClient } from '@/lib/customer-client';
-import { TrashIcon } from 'lucide-react';
+import { Minus, Plus, TrashIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -18,9 +18,11 @@ const formatPrice = (amount: number, currency = 'USD'): string =>
     style: 'currency',
   }).format(amount / 100);
 
+// eslint-disable-next-line max-lines-per-function
 export default function CartPageContent(): JSX.Element {
   const { cart, loading, refreshCart } = useCart();
   const [isRemoving, setIsRemoving] = useState<Record<string, boolean>>({});
+  const [isUpdating, setIsUpdating] = useState<Record<string, boolean>>({});
   const { customerClient } = useCustomerClient();
   const [promocode, setPromocode] = useState('');
   const [discountedPrice, setDiscountedPrice] = useState(0);
@@ -41,6 +43,24 @@ export default function CartPageContent(): JSX.Element {
       console.error('Failed to remove item:', error);
     } finally {
       setIsRemoving((prev) => ({ ...prev, [lineItemId]: false }));
+    }
+  };
+
+  const handleQuantityChange = async (lineItemId: string, newQuantity: number): Promise<void> => {
+    if (newQuantity < 1) {
+      return;
+    }
+
+    setIsUpdating((prev) => ({ ...prev, [lineItemId]: true }));
+    try {
+      if (customerClient) {
+        await customerClient.updateCartItemQuantity(lineItemId, newQuantity);
+        await refreshCart();
+      }
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
+    } finally {
+      setIsUpdating((prev) => ({ ...prev, [lineItemId]: false }));
     }
   };
 
@@ -150,7 +170,32 @@ export default function CartPageContent(): JSX.Element {
                     {productName}
                   </Link>
 
-                  <div className="text-sm text-muted-foreground mt-1">Quantity: {item.quantity}</div>
+                  <div className="flex items-center mt-2">
+                    <span className="text-sm text-muted-foreground mr-2">Quantity:</span>
+                    <div className="flex items-center border rounded-md">
+                      <Button
+                        className="h-8 w-8"
+                        disabled={isUpdating[item.id] || item.quantity <= 1}
+                        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        size="icon"
+                        variant="ghost"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="px-2 min-w-[40px] text-center">{item.quantity}</span>
+                      <Button
+                        className="h-8 w-8"
+                        disabled={isUpdating[item.id]}
+                        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        size="icon"
+                        variant="ghost"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
 
                   <div className="font-medium mt-2">{formatPrice(totalPrice)}</div>
                 </div>
@@ -187,16 +232,8 @@ export default function CartPageContent(): JSX.Element {
 
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span>{formatPrice(subtotal)}</span>
+              <span>{formatPrice(discountedPrice || subtotal)}</span>
             </div>
-            {discountedPrice ? (
-              <div className="flex justify-between font-bold text-lg">
-                <span>Discounted price</span>
-                <span>{formatPrice(discountedPrice)}</span>
-              </div>
-            ) : (
-              ''
-            )}
 
             <Button className="w-full mt-6">Proceed to Checkout</Button>
 
