@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useProduct } from '@/hooks/use-product';
 import { useToast } from '@/hooks/use-toast';
 import { useCustomerClient } from '@/lib/customer-client';
-import { Check, Loader2, ShoppingCart } from 'lucide-react';
+import { Loader2, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -45,12 +45,7 @@ const getLocalizedText = (localizedObject: LocalizedString | null | string | und
   return defaultText;
 };
 
-const getBuyButtonClass = (isAddedToCart: boolean): string => {
-  if (isAddedToCart) {
-    return 'bg-green-600 hover:bg-green-700';
-  }
-  return 'bg-primary hover:bg-primary/90';
-};
+const getBuyButtonClass = (): string => 'bg-primary hover:bg-primary/90';
 
 const getButtonContent = (isAddingToCart: boolean, isAddedToCart: boolean): JSX.Element => {
   if (isAddingToCart) {
@@ -63,12 +58,7 @@ const getButtonContent = (isAddingToCart: boolean, isAddedToCart: boolean): JSX.
   }
 
   if (isAddedToCart) {
-    return (
-      <>
-        <Check className="h-4 w-4 mr-2" />
-        Added
-      </>
-    );
+    return <span>Remove from cart.</span>;
   }
 
   return (
@@ -180,16 +170,57 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
     }
   };
 
-  const handleAddToCart = (e: React.MouseEvent): void => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (isAddingToCart || isAddedToCart || !customerClient) {
+  const removeFromCart = async (): Promise<void> => {
+    if (!customerClient) {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    handleAddToCartAsync();
+    setIsAddingToCart(true);
+    try {
+      const lineId = cart?.lineItems.find((item) => item.productId === product?.id)?.id;
+      const result = await customerClient.removeFromCart(lineId ?? '');
+
+      if (result) {
+        setIsAddedToCart(false);
+        await refreshCart(); // Update cart data in context
+
+        toast({
+          description: `${getLocalizedText(product?.name ? product.name : '', 'Untitled Book')} has been removed from your cart.`,
+          duration: 3000,
+          title: 'Removed from cart',
+        });
+      } else {
+        toast({
+          description: 'Could not remove item from cart. Please try again.',
+          title: 'Error',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      toast({
+        description: 'Could not remove item from cart. Please try again.',
+        title: 'Error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleCartButtonClick = async (e: React.MouseEvent): Promise<void> => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isAddingToCart || !customerClient) {
+      return;
+    }
+
+    if (isAddedToCart) {
+      await removeFromCart();
+    } else {
+      await handleAddToCartAsync();
+    }
   };
 
   if (error) {
@@ -270,11 +301,8 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
                   <span className="text-lg bold">{price} $</span>
                 </div>
               ))}
-            <Button
-              className={`w-80 ${getBuyButtonClass(isAddedToCart)}`}
-              disabled={isAddedToCart || isAddingToCart}
-              onClick={handleAddToCart}
-            >
+
+            <Button className={`w-80 ${getBuyButtonClass()}`} disabled={isAddingToCart} onClick={handleCartButtonClick}>
               {getButtonContent(isAddingToCart, isAddedToCart)}
             </Button>
           </div>
