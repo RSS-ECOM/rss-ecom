@@ -427,6 +427,15 @@ export default class CustomerClient {
     const root = this.isAnonymousMode ? this.anonymousRoot : this.customerRoot;
 
     if (!root) {
+      console.log('No root client available for cart creation');
+
+      if (this.isAnonymousMode) {
+        this.anonymousClient = createAnonymousClient();
+        if (this.anonymousClient) {
+          this.anonymousRoot = createApiBuilderFromCtpClient(this.anonymousClient).withProjectKey({ projectKey });
+          return this.createCart();
+        }
+      }
       return null;
     }
 
@@ -446,43 +455,75 @@ export default class CustomerClient {
 
           if (response.body && response.body.id) {
             Cookies.set('cartId', response.body.id, { expires: 30 });
+            return response.body;
           }
         } catch (error) {
           console.error('Failed to create anonymous cart:', error);
+
           if (
             error instanceof Error &&
-            (error.message.includes('invalid_scope') || error.message.includes('insufficient_scope'))
+            (error.message.includes('invalid_scope') ||
+              error.message.includes('insufficient_scope') ||
+              error.message.includes('invalid_grant') ||
+              error.message.includes('token was not found') ||
+              error.message.includes('expired'))
           ) {
             console.log('Regenerating anonymous client due to auth issues');
             this.anonymousClient = createAnonymousClient();
             if (this.anonymousClient) {
               this.anonymousRoot = createApiBuilderFromCtpClient(this.anonymousClient).withProjectKey({ projectKey });
-              response = await this.anonymousRoot
-                .carts()
-                .post({
-                  body: { currency: 'USD' },
-                })
-                .execute();
 
-              if (response.body && response.body.id) {
-                Cookies.set('cartId', response.body.id, { expires: 30 });
+              try {
+                response = await this.anonymousRoot
+                  .carts()
+                  .post({
+                    body: { currency: 'USD' },
+                  })
+                  .execute();
+
+                if (response.body && response.body.id) {
+                  Cookies.set('cartId', response.body.id, { expires: 30 });
+                  return response.body;
+                }
+              } catch (retryError) {
+                console.error('Failed to create cart after client regeneration:', retryError);
+                return null;
               }
             }
           }
+          return null;
         }
       } else {
-        response = await root
-          .me()
-          .carts()
-          .post({
-            body: {
-              currency: 'USD',
-            },
-          })
-          .execute();
+        try {
+          response = await root
+            .me()
+            .carts()
+            .post({
+              body: {
+                currency: 'USD',
+              },
+            })
+            .execute();
+          return response.body;
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            (error.message.includes('invalid_grant') ||
+              error.message.includes('invalid_scope') ||
+              error.message.includes('insufficient_scope') ||
+              error.message.includes('token was not found') ||
+              error.message.includes('expired'))
+          ) {
+            console.log('Falling back to anonymous cart due to auth issues');
+            this.isAnonymousMode = true;
+            Cookies.remove('login');
+            return this.createCart();
+          }
+          throw error;
+        }
       }
 
-      return response?.body || null;
+      return null;
     } catch (error) {
       console.error('Error creating cart:', error);
       return null;
@@ -495,11 +536,18 @@ export default class CustomerClient {
     const cartId = Cookies.get('cartId');
 
     if (!root) {
+      console.log('No root client available, attempting to create anonymous client');
+      if (this.isAnonymousMode) {
+        this.anonymousClient = createAnonymousClient();
+        if (this.anonymousClient) {
+          this.anonymousRoot = createApiBuilderFromCtpClient(this.anonymousClient).withProjectKey({ projectKey });
+          return this.createCart();
+        }
+      }
       return null;
     }
 
     try {
-      // anonymous users with stored cart ID
       if (this.isAnonymousMode && cartId) {
         try {
           const response = await root.carts().withId({ ID: cartId }).get().execute();
@@ -511,43 +559,62 @@ export default class CustomerClient {
         }
       }
 
+      if (this.isAnonymousMode) {
+        return this.createCart();
+      }
       try {
-        if (this.isAnonymousMode) {
-          return this.createCart();
-        }
-
         const response = await root.me().activeCart().get().execute();
         return response.body;
       } catch (error) {
-        if (isErrorWithStatusCode(error)) {
-          if ((error.statusCode === 400 || error.statusCode === 403) && this.isAnonymousMode) {
-            console.log('Authentication error for anonymous user, creating a new cart');
-            return this.createCart();
-          }
+        if (isErrorWithStatusCode(error) && error.statusCode === 404) {
+          console.log('No active cart found for authenticated user, creating a new one');
+          return this.createCart();
+        }
 
-          if (error.statusCode === 404) {
-            console.log('No active cart found, creating a new one');
+        if (
+          isErrorWithStatusCode(error) &&
+          (error.statusCode === 400 || error.statusCode === 401 || error.statusCode === 403)
+        ) {
+          console.log('Authentication error, falling back to anonymous mode');
+          this.isAnonymousMode = true;
+
+          Cookies.remove('login');
+
+          this.anonymousClient = createAnonymousClient();
+          if (this.anonymousClient) {
+            this.anonymousRoot = createApiBuilderFromCtpClient(this.anonymousClient).withProjectKey({ projectKey });
             return this.createCart();
           }
         }
+
         throw error;
       }
     } catch (error) {
       console.error('Error getting active cart:', error);
 
       if (
-        this.isAnonymousMode &&
         error instanceof Error &&
-        (error.message.includes('invalid_scope') ||
+        (error.message.includes('invalid_grant') ||
+          error.message.includes('invalid_scope') ||
           error.message.includes('insufficient_scope') ||
-          error.message.includes('Permissions exceeded'))
+          error.message.includes('Permissions exceeded') ||
+          error.message.includes('token was not found') ||
+          error.message.includes('expired'))
       ) {
-        console.log('Attempting to create a new cart due to auth error');
-        try {
-          return this.createCart();
-        } catch (createErr) {
-          console.error('Failed to create new cart after auth error:', createErr);
-          return null;
+        console.log('Authentication error detected, attempting to create anonymous cart');
+
+        this.isAnonymousMode = true;
+
+        Cookies.remove('login');
+
+        this.anonymousClient = createAnonymousClient();
+        if (this.anonymousClient) {
+          this.anonymousRoot = createApiBuilderFromCtpClient(this.anonymousClient).withProjectKey({ projectKey });
+          try {
+            return this.createCart();
+          } catch (createErr) {
+            console.error('Failed to create new anonymous cart:', createErr);
+          }
         }
       }
 

@@ -48,12 +48,16 @@ export default function ContactsPage(): JSX.Element {
 
               <div className="flex items-center">
                 <Phone className="h-5 w-5 mr-2 text-primary shrink-0" />
-                <span>+1 210-478-1452</span>
+                <a className="hover:underline" href="tel:+12104781452">
+                  +1 210-478-1452
+                </a>
               </div>
 
               <div className="flex items-center">
                 <Mail className="h-5 w-5 mr-2 text-primary shrink-0" />
-                <span>admin@storyhive.com</span>
+                <a className="hover:underline" href="mailto:admin@storyhive.com">
+                  admin@storyhive.com
+                </a>
               </div>
             </div>
           </CardContent>
