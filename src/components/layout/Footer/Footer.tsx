@@ -119,13 +119,17 @@ export default function Footer(): JSX.Element {
                 <li>
                   <div className="flex items-center">
                     <Phone className="h-5 w-5 mr-2 text-primary shrink-0" />
-                    <span className="text-sm">+1 210-478-1452</span>
+                    <a className="text-sm hover:underline" href="tel:+12104781452">
+                      +1 210-478-1452
+                    </a>
                   </div>
                 </li>
                 <li>
                   <div className="flex items-center">
                     <Mail className="h-5 w-5 mr-2 text-primary shrink-0" />
-                    <span className="text-sm">admin@storyhive.com</span>
+                    <a className="text-sm hover:underline" href="mailto:admin@storyhive.com">
+                      admin@storyhive.com
+                    </a>
                   </div>
                 </li>
               </ul>

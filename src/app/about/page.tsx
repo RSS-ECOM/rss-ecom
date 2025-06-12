@@ -113,7 +113,9 @@ export default function AboutPage(): React.JSX.Element {
             <div className="p-4">
               <Mail className="h-10 w-10 mx-auto text-primary mb-4" />
               <h3 className="font-medium mb-2 dark:text-amber-200">Email Us</h3>
-              <p className="text-muted-foreground">admin@storyhive.com</p>
+              <a className="hover:underline" href="mailto:admin@storyhive.com">
+                admin@storyhive.com
+              </a>
             </div>
             <div className="p-4">
               <Map className="h-10 w-10 mx-auto text-primary mb-4" />
