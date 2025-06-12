@@ -25,8 +25,6 @@ export default function CartPageContent(): JSX.Element {
   const [isUpdating, setIsUpdating] = useState<Record<string, boolean>>({});
   const { customerClient } = useCustomerClient();
   const [promocode, setPromocode] = useState('');
-  const [discountedPrice, setDiscountedPrice] = useState(0);
-  const [discount, setDiscount] = useState(0);
 
   useEffect(() => {
     refreshCart().catch(console.error);
@@ -103,13 +101,8 @@ export default function CartPageContent(): JSX.Element {
 
   async function handleActivateCode(code: string): Promise<void> {
     try {
-      const response = await customerClient.applyDiscountCode(code);
-      if (response?.discountOnTotalPrice?.discountedAmount.centAmount) {
-        setDiscount(response?.discountOnTotalPrice?.discountedAmount.centAmount);
-      }
-      if (response?.totalPrice.centAmount) {
-        setDiscountedPrice(response?.totalPrice.centAmount);
-      }
+      await customerClient.applyDiscountCode(code);
+      await refreshCart();
     } catch (error) {
       console.error(error);
     }
@@ -215,24 +208,22 @@ export default function CartPageContent(): JSX.Element {
         <div>
           <Card className="p-6">
             <h2 className="text-xl font-medium mb-4">Order Summary</h2>
-            <div className="space-y-2 mb-6">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
-              </div>
-              {discountedPrice ? (
+            {cart.discountOnTotalPrice?.discountedAmount.centAmount && (
+              <div className="space-y-2 mb-6">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(subtotal)}</span>
+                </div>
                 <div className="flex justify-between">
                   <span>Discount</span>
-                  <span>{formatPrice(discount)}</span>
+                  <span>{formatPrice(cart.discountOnTotalPrice?.discountedAmount.centAmount)}</span>
                 </div>
-              ) : (
-                ''
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span>{formatPrice(discountedPrice || subtotal)}</span>
+              <span>{formatPrice(cart?.totalPrice.centAmount)}</span>
             </div>
 
             <Button className="w-full mt-6">Proceed to Checkout</Button>
