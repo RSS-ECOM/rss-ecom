@@ -1,9 +1,9 @@
 'use client';
 
+import { useCart } from '@/components/cart/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast'; // Fix import from correct location
-import { useCart } from '@/components/cart/CartContext';
+import { useResponsiveToast } from '@/hooks/use-responsive-toast';
 import { useCustomerClient } from '@/lib/customer-client';
 import { cn } from '@/lib/utils';
 import { type ProductProjection } from '@commercetools/platform-sdk';
@@ -63,7 +63,7 @@ export default function ProductCard({ className, formatPrice, product }: Product
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const { customerClient } = useCustomerClient();
   const { refreshCart } = useCart();
-  const { toast } = useToast();
+  const { toast } = useResponsiveToast();
 
   const { prices = [] } = product.masterVariant;
 
@@ -131,12 +131,14 @@ export default function ProductCard({ className, formatPrice, product }: Product
     }
 
     setIsAddingToCart(true);
+    setIsHovered(false);
+
     try {
       const result = await customerClient.addToCart(product.id, 1, 1);
 
       if (result) {
         setIsAddedToCart(true);
-        await refreshCart(); // Update cart data in context
+        await refreshCart();
 
         toast({
           description: `${getLocalizedText(product.name, 'Untitled Book')} has been added to your cart.`,
@@ -146,7 +148,7 @@ export default function ProductCard({ className, formatPrice, product }: Product
 
         setTimeout(() => {
           setIsAddedToCart(false);
-        }, 2000);
+        }, 2500);
       } else {
         toast({
           description: 'Could not add item to cart. Please try again.',
@@ -161,14 +163,19 @@ export default function ProductCard({ className, formatPrice, product }: Product
         title: 'Error',
         variant: 'destructive',
       });
+      setIsAddedToCart(false);
     } finally {
-      setIsAddingToCart(false);
+      setTimeout(() => {
+        setIsAddingToCart(false);
+      }, 500);
     }
   };
 
   const handleAddToCart = (e: React.MouseEvent): void => {
     e.preventDefault();
     e.stopPropagation();
+
+    setIsHovered(false);
 
     if (isAddingToCart || isAddedToCart || !customerClient) {
       return;

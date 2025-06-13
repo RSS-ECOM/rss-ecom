@@ -14,7 +14,7 @@ export default function CategoriesPage(): JSX.Element {
       <Breadcrumbs items={breadcrumbItems} />
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 dark:text-foreground">Book Categories</h1>
+        <h1 className="text-3xl font-bold mb-2 dark:text-amber-500/80">Book Categories</h1>
         <p className="text-muted-foreground">Explore our book collection by category to find your next great read.</p>
       </div>
 

@@ -10,7 +10,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { type CarouselApi } from '@/components/ui/carousel';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useProduct } from '@/hooks/use-product';
-import { useToast } from '@/hooks/use-toast';
+import { useResponsiveToast } from '@/hooks/use-responsive-toast';
 import { useCustomerClient } from '@/lib/customer-client';
 import { Loader2, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
@@ -78,7 +78,7 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const { customerClient } = useCustomerClient();
   const { cart, refreshCart } = useCart();
-  const { toast } = useToast();
+  const { toast } = useResponsiveToast();
 
   const { id } = params;
 
@@ -277,7 +277,7 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
           </div>
 
           <div className="grow-0 flex flex-col justify-start gap-4 mt-6 md:mt-0">
-            <h2 className="text-2xl font-bold">{product.name['en-US']}</h2>
+            <h2 className="text-2xl font-bold dark:text-amber-500/80">{product.name['en-US']}</h2>
             <div>
               {product.masterVariant?.attributes?.map((attribute) =>
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -302,13 +302,14 @@ export default function ProductPage({ params }: { params: { id: string } }): JSX
                 </div>
               ))}
 
+            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
             <Button className={`w-80 ${getBuyButtonClass()}`} disabled={isAddingToCart} onClick={handleCartButtonClick}>
               {getButtonContent(isAddingToCart, isAddedToCart)}
             </Button>
           </div>
         </div>
 
-        <DialogContent className="h-[800px] w-[80vw] max-w-[80vw] px-20">
+        <DialogContent className="h-[700px] md:h-[800px] w-[80vw] max-w-[80vw] px-20 rounded-lg">
           <Carousel className="w-full">
             <CarouselContent className="-ml-2">
               {product.masterVariant?.images?.map((image) => (

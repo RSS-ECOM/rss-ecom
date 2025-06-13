@@ -46,7 +46,7 @@ export default function ProductsPage({ searchParams }: ProductsPageProps): JSX.E
           </div>
         ) : (
           <>
-            <h1 className="text-3xl font-bold mb-2">Our Books Collection</h1>
+            <h1 className="text-3xl font-bold mb-2 dark:text-amber-500/80">Our Books Collection</h1>
             <p className="text-muted-foreground">
               Discover our carefully curated selection of books across all genres.
             </p>
@@ -57,7 +57,7 @@ export default function ProductsPage({ searchParams }: ProductsPageProps): JSX.E
       {/* Categories as horizontal tabs at the top */}
       <div className="mb-6 overflow-x-auto pb-2 hidden md:block">
         <div className="flex space-x-2 min-w-max">
-          <h4 className="text-xl font-bold mb-2">Categories</h4>
+          <h4 className="text-xl font-bold mb-2 dark:text-amber-500/80">Categories</h4>
           <Button asChild size="sm" variant={!categoryId ? 'secondary' : 'ghost'}>
             <Link href="/products">All Books</Link>
           </Button>
