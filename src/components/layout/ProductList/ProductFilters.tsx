@@ -628,7 +628,7 @@ export default function ProductFilters({
         <SheetContent className="w-[300px] sm:w-[400px]" side="left">
           <div className="flex flex-col h-full">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Filters</h2>
+              <h2 className="text-lg font-semibold dark:text-foreground">Filters</h2>
               {activeFiltersCount > 0 && (
                 <Button className="text-sm text-primary" onClick={resetFilters} size="sm" variant="ghost">
                   Reset all
@@ -648,7 +648,9 @@ export default function ProductFilters({
             >
               {filterGroups.map((group) => (
                 <AccordionItem key={group.id} value={group.id}>
-                  <AccordionTrigger className="text-sm font-medium">{group.name}</AccordionTrigger>
+                  <AccordionTrigger className="text-sm font-medium dark:text-amber-300/80">
+                    {group.name}
+                  </AccordionTrigger>
                   <AccordionContent>{renderFilterGroup(group)}</AccordionContent>
                 </AccordionItem>
               ))}

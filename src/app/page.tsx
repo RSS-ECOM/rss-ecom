@@ -11,7 +11,7 @@ import Link from 'next/link';
 export default function HomePage(): JSX.Element {
   return (
     <div>
-      <Alert className="rounded-none border-yellow-400 text-yellow-1000 bg-yellow-200">
+      <Alert className="rounded-none border-yellow-400 text-yellow-1000 bg-yellow-200 dark:text-amber-900/80">
         <AlertDescription>
           Promo code you can use in cart: <strong>JUNE20</strong> for 20% discount and <strong>CODE2025</strong> for 15%
           discount
