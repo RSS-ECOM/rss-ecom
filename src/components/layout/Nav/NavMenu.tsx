@@ -172,8 +172,20 @@ function NavMenu(): React.JSX.Element {
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem> */}
+        <NavigationMenuItem className="relative group/books">
+          <NavigationMenuTrigger className={clearNavigationMenuTriggerStyle}>
+            About
+            <span className="h-[1px] inline-block bg-primary absolute left-0 -bottom-1 w-0 group-hover/books:w-full transition-[width] duration-300 ease-in-out" />
+          </NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+              <ListItem href={'/about'} key={'About Story Hive'} title={'About Story Hive'}></ListItem>
+              <ListItem href={'/about-us'} key={'About us'} title={'About us'}></ListItem>
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
 
-        <NavigationMenuItem className="relative group/about">
+        {/* <NavigationMenuItem className="relative group/about">
           <Link href="/about" legacyBehavior passHref>
             <NavigationMenuLink className={clearNavigationMenuLinkStyle}>
               About
@@ -186,7 +198,7 @@ function NavMenu(): React.JSX.Element {
               />
             </NavigationMenuLink>
           </Link>
-        </NavigationMenuItem>
+        </NavigationMenuItem> */}
 
         <NavigationMenuItem className="relative group/contacts">
           <Link href="/contacts" legacyBehavior passHref>

@@ -139,7 +139,8 @@ export default function MobileMenu({ isLoggedIn, isOpen, onClose }: MobileMenuPr
           <MobileNavLink href="/products">All Books</MobileNavLink>
           <MobileNavLink href="/categories">Categories</MobileNavLink>
           <MobileNavLink href="/sale">Sale</MobileNavLink>
-          <MobileNavLink href="/about">About</MobileNavLink>
+          <MobileNavLink href="/about">About Story Hive</MobileNavLink>
+          <MobileNavLink href="/about-us">About us</MobileNavLink>
           <MobileNavLink href="/contacts">Contact Us</MobileNavLink>
           <MobileNavLink href="/cart">Cart</MobileNavLink>
 

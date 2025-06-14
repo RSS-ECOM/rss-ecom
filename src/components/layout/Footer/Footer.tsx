@@ -88,7 +88,10 @@ export default function Footer(): JSX.Element {
               <h3 className="text-lg md:text-xl font-bold dark:text-foreground">Information</h3>
               <ul className="space-y-1.5 md:space-y-2">
                 <li>
-                  <CustomLink href="/about">About Us</CustomLink>
+                  <CustomLink href="/about">About Story Hive</CustomLink>
+                </li>
+                <li>
+                  <CustomLink href="/about-us">About Us</CustomLink>
                 </li>
                 {/* <li>
                   <CustomLink href="/events">Blog</CustomLink>
